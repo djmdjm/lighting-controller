@@ -1,3 +1,6 @@
+#ifndef SPI_H
+#define SPI_H
+
 /*
  * Copyright (c) 2013 Damien Miller <djm@mindrot.org>
  *
@@ -14,41 +17,20 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-/* Lamp/LCD test application */
+/* Convenience routines for hardware SPI */
 
-#include <avr/io.h>
-#include <util/delay.h>
+#define SPI_PORT	PORTB
+#define SPI_DDR		DDRB
+#define SPI_MISO	3
+#define SPI_MOSI	2
+#define SPI_SCLK	1
+#define SPI_SS		0 /* Not used; caller must manage chip select */
 
-#include "rgbled.h"
-#include "demux.h"
-#include "lcd.h"
-#include "num_format.h"
-#include "spi.h"
-#include "ad56x8.h"
+/* Set up port */
+void spi_setup(void);
 
-int
-main(void)
-{
-	int i;
-	uint16_t j;
+/* Write a byte */
+void spi_write(uint8_t val);
 
-	demux_setup();
-	rgbled_setup();
-	lcd_setup();
-	spi_setup();
-	ad56x8_setup(1);
+#endif /* SPI_H */
 
-	lcd_moveto(0, 0);
-	lcd_string("Hello Hugo");
-
-	for (i = 0;; i++) {
-		ad56x8_write_update(-1, i);
-		rgbled_n(i & 0xf);
-		demux_set_line(i % 16);
-		lcd_moveto(0, 1);
-		lcd_string(ntod(i));
-		lcd_string("       ");
-		for (j = 0; j < 512; j++)
-			ad56x8_write_update(-1, j * 256);
-	}
-}

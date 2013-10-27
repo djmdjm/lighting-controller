@@ -14,41 +14,33 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-/* Lamp/LCD test application */
-
 #include <avr/io.h>
-#include <util/delay.h>
 
-#include "rgbled.h"
-#include "demux.h"
-#include "lcd.h"
-#include "num_format.h"
 #include "spi.h"
-#include "ad56x8.h"
 
-int
-main(void)
+void
+spi_write(uint8_t val)
 {
-	int i;
-	uint16_t j;
-
-	demux_setup();
-	rgbled_setup();
-	lcd_setup();
-	spi_setup();
-	ad56x8_setup(1);
-
-	lcd_moveto(0, 0);
-	lcd_string("Hello Hugo");
-
-	for (i = 0;; i++) {
-		ad56x8_write_update(-1, i);
-		rgbled_n(i & 0xf);
-		demux_set_line(i % 16);
-		lcd_moveto(0, 1);
-		lcd_string(ntod(i));
-		lcd_string("       ");
-		for (j = 0; j < 512; j++)
-			ad56x8_write_update(-1, j * 256);
-	}
+	SPDR = val;
+	/* Wait for value to be written. */
+	while ((SPSR & (1 << SPIF)) == 0)
+		;
 }
+
+void
+spi_setup(void)
+{
+	/* MOSI, SCLK are outputs. MISO is an input */
+	SPI_DDR = (SPI_DDR & ~(1 << SPI_MISO)) |
+	    (1 << SPI_MOSI) | (1 << SPI_SCLK);
+	SPI_PORT &= ~((1 << SPI_SCLK) || (1 << SPI_MOSI));
+
+	/*
+	 * Enable SPI, without interrupts, as master, MSB first,
+	 * idle low clock polarity, sample on falling edge of clock and
+	 * with SPI running at F_CPU/2.
+	 */
+	SPCR = (1 << SPE) | (1 << MSTR) | (1 << CPHA);
+	SPSR = (1 << SPI2X);
+}
+

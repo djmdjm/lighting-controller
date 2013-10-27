@@ -10,7 +10,7 @@ LOADER=teensy
 
 CFLAGS=-mmcu=${MCU} -DF_CPU=${CPUFREQ}UL -Wall -Os -std=gnu99 -Wextra
 
-LIBAVR_OBJS=demux.o lcd.o rgbled.o num_format.o
+LIBAVR_OBJS=demux.o lcd.o rgbled.o num_format.o spi.o ad56x8.o
 
 CC=avr-gcc
 OBJCOPY=avr-objcopy

@@ -1,3 +1,6 @@
+#ifndef AD56x8_H
+#define AD56x8_H
+
 /*
  * Copyright (c) 2013 Damien Miller <djm@mindrot.org>
  *
@@ -14,41 +17,18 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-/* Lamp/LCD test application */
+/* Convenience routines for hardware AD56x8 */
 
-#include <avr/io.h>
-#include <util/delay.h>
+#define AD56X8_PORT	PORTB
+#define AD56X8_DDR	DDRB
+#define AD56X8_SS	0
 
-#include "rgbled.h"
-#include "demux.h"
-#include "lcd.h"
-#include "num_format.h"
-#include "spi.h"
-#include "ad56x8.h"
+/* Set up ADC, optionally enabling internal voltage reference */
+void ad56x8_setup(int vref_on);
 
-int
-main(void)
-{
-	int i;
-	uint16_t j;
+/* Write to an ADC channel, updating it immediately (channel -1 == all) */
+void ad56x8_write_update(int channel, uint16_t val);
 
-	demux_setup();
-	rgbled_setup();
-	lcd_setup();
-	spi_setup();
-	ad56x8_setup(1);
+#endif /* AD56x8_H */
 
-	lcd_moveto(0, 0);
-	lcd_string("Hello Hugo");
 
-	for (i = 0;; i++) {
-		ad56x8_write_update(-1, i);
-		rgbled_n(i & 0xf);
-		demux_set_line(i % 16);
-		lcd_moveto(0, 1);
-		lcd_string(ntod(i));
-		lcd_string("       ");
-		for (j = 0; j < 512; j++)
-			ad56x8_write_update(-1, j * 256);
-	}
-}

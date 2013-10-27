@@ -14,41 +14,45 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-/* Lamp/LCD test application */
-
 #include <avr/io.h>
 #include <util/delay.h>
-
-#include "rgbled.h"
-#include "demux.h"
-#include "lcd.h"
-#include "num_format.h"
 #include "spi.h"
 #include "ad56x8.h"
 
-int
-main(void)
+static void
+ad56x8_select(void)
 {
-	int i;
-	uint16_t j;
+	AD56X8_PORT |= (1 << AD56X8_SS);
+	_delay_us(0.020);
+	AD56X8_PORT &= ~(1 << AD56X8_SS);
+}
 
-	demux_setup();
-	rgbled_setup();
-	lcd_setup();
-	spi_setup();
-	ad56x8_setup(1);
+static void
+ad56x8_command(uint8_t a, uint8_t b, uint8_t c, uint8_t d)
+{
+	ad56x8_select();
+	spi_write(a);
+	spi_write(b);
+	spi_write(c);
+	spi_write(d);
+	_delay_us(0.020);
+	ad56x8_select();
+}
 
-	lcd_moveto(0, 0);
-	lcd_string("Hello Hugo");
+void
+ad56x8_setup(int vref_on)
+{
+	AD56X8_DDR |= (1 << AD56X8_SS);
+	ad56x8_command(0x07, 0x00, 0x00, 0x00);
+	if (vref_on)
+		ad56x8_command(0x08, 0x00, 0x00, 0x01);
+}
 
-	for (i = 0;; i++) {
-		ad56x8_write_update(-1, i);
-		rgbled_n(i & 0xf);
-		demux_set_line(i % 16);
-		lcd_moveto(0, 1);
-		lcd_string(ntod(i));
-		lcd_string("       ");
-		for (j = 0; j < 512; j++)
-			ad56x8_write_update(-1, j * 256);
-	}
+void
+ad56x8_write_update(int channel, uint16_t val)
+{
+	if (channel == -1)
+		channel = 15;
+	ad56x8_command(0x03, (channel & 0xf) << 4,
+	    (val >> 8) & 0xff, val & 0xff);
 }
