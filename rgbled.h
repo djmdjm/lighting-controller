@@ -23,8 +23,8 @@
 
 #define RGBLED_DDR	DDRC
 #define RGBLED_PORT	PORTC
-#define RGBLED_R	6
-#define RGBLED_G	4
+#define RGBLED_R	7
+#define RGBLED_G	6
 #define RGBLED_B	5
 
 /* Set up port */
