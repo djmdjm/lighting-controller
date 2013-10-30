@@ -24,7 +24,6 @@
 #define SPI_MISO	3
 #define SPI_MOSI	2
 #define SPI_SCLK	1
-#define SPI_SS		0 /* Not used; caller must manage chip select */
 
 /* Set up port */
 void spi_setup(void);
