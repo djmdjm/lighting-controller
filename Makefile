@@ -8,9 +8,15 @@ LOADER=teensy
 #AVRDUDE_HW=buspirate
 #AVRDUDE_EXTRA=
 
-CFLAGS=-mmcu=${MCU} -DF_CPU=${CPUFREQ}UL -Wall -Os -std=gnu99 -Wextra
+OPT=-Os
 
-LIBAVR_OBJS=demux.o lcd.o rgbled.o num_format.o spi.o ad56x8.o
+WARNFLAGS=-Wall -Wextra 
+WARNFLAGS+=-Werror -Wno-type-limits
+
+CFLAGS=-mmcu=${MCU} -DF_CPU=${CPUFREQ}UL ${WARNFLAGS} ${OPT} -std=gnu99
+CFLAGS+=-funsigned-char -funsigned-bitfields -fpack-struct -fshort-enums
+
+LIBAVR_OBJS=demux.o lcd.o rgbled.o num_format.o spi.o ad56x8.o encoder.o event.o
 
 CC=avr-gcc
 OBJCOPY=avr-objcopy
