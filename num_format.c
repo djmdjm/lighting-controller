@@ -14,6 +14,8 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
+#include <string.h>
+
 #include "num_format.h"
 
 const char *
@@ -39,9 +41,9 @@ ntod(int n)
 }
 
 const char *
-ntoh(unsigned int n)
+ntoh(unsigned int n, int preamble)
 {
-	static char ret[sizeof(unsigned int) * 2 + 2];
+	static char ret[sizeof(unsigned int) * 2 + 2 + 1];
 	int i = sizeof(ret) - 2;
 
 	if (n == 0)
@@ -50,7 +52,26 @@ ntoh(unsigned int n)
 		ret[i--] = "0123456789abcdef"[n & 0xf];
 		n >>= 4;
 	}
+	if (preamble) {
+		ret[i--] = 'x';
+		ret[i--] = '0';
+	}
 	ret[sizeof(ret) - 1] = '\0';
 	return &(ret[i + 1]);
+}
+
+char *
+rjustify(const char *s, char *buf, unsigned int width)
+{
+	size_t l = strlen(s);
+
+	if (width > 0) {
+		if (l > width - 1)
+			l = width - 1;
+		memset(buf, ' ', width - 1 - l);
+		memcpy(buf + width - 1 - l, s, l);
+		buf[width - 1] = '\0';
+	}
+	return buf;
 }
 
