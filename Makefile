@@ -11,12 +11,13 @@ LOADER=teensy
 OPT=-Os
 
 WARNFLAGS=-Wall -Wextra 
-WARNFLAGS+=-Werror -Wno-type-limits
+WARNFLAGS+=-Werror -Wno-type-limits -Wno-unused
 
 CFLAGS=-mmcu=${MCU} -DF_CPU=${CPUFREQ}UL ${WARNFLAGS} ${OPT} -std=gnu99
 CFLAGS+=-funsigned-char -funsigned-bitfields -fpack-struct -fshort-enums
 
 LIBAVR_OBJS=demux.o lcd.o rgbled.o num_format.o spi.o ad56x8.o encoder.o event.o
+LIBAVR_OBJS+=mcp23s1x.o
 
 CC=avr-gcc
 OBJCOPY=avr-objcopy
