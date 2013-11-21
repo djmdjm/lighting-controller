@@ -18,21 +18,26 @@
 
 #include "spi.h"
 
-void
+uint8_t
 spi_write(uint8_t val)
 {
 	SPDR = val;
 	/* Wait for value to be written. */
 	while ((SPSR & (1 << SPIF)) == 0)
 		;
+	return SPDR;
 }
 
 void
 spi_setup(void)
 {
-	/* MOSI, SCLK are outputs. MISO is an input */
+	/*
+	 * MOSI, SCLK are outputs. MISO is an input
+	 * Apparently SS needs to be configured as an output or the AVR can
+	 * flip to SPI slave mode if it goes low. Waste of a pin!
+	 */
 	SPI_DDR = (SPI_DDR & ~(1 << SPI_MISO)) |
-	    (1 << SPI_MOSI) | (1 << SPI_SCLK);
+	    (1 << SPI_MOSI) | (1 << SPI_SCLK) | (1 << SPI_SS);
 	SPI_PORT &= ~((1 << SPI_SCLK) || (1 << SPI_MOSI));
 
 	/*
@@ -40,7 +45,16 @@ spi_setup(void)
 	 * idle low clock polarity, sample on falling edge of clock and
 	 * with SPI running at F_CPU/2.
 	 */
-	SPCR = (1 << SPE) | (1 << MSTR) | (1 << CPHA);
 	SPSR = (1 << SPI2X);
+	SPCR = (1 << SPE) | (1 << MSTR) | (1 << CPHA);
+}
+
+void
+spi_clock_phase(int sample_on_leading)
+{
+	/* SPCR &= ~(1 << SPE); */
+	SPCR = (SPCR & ~(1 << CPHA)) |
+	    (sample_on_leading ? 0 : (1 << CPHA));
+	/* SPCR |= (1 << SPE); */
 }
 

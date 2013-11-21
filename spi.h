@@ -24,12 +24,21 @@
 #define SPI_MISO	3
 #define SPI_MOSI	2
 #define SPI_SCLK	1
+#define SPI_SS		0
 
 /* Set up port */
 void spi_setup(void);
 
-/* Write a byte */
-void spi_write(uint8_t val);
+/*
+ * By default the SPI clock is configured for devices that sample on the
+ * falling edge of the clock cycle. Setting sample_on_leading=1 here will
+ * change the polarity for devices that expect samples on the leading edge
+ * of SCLK.
+ */
+void spi_clock_phase(int sample_on_leading);
+
+/* Write a byte; returns the value read from the bus */
+uint8_t spi_write(uint8_t val);
 
 #endif /* SPI_H */
 
