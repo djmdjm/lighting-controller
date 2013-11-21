@@ -30,16 +30,22 @@
 #include "ad56x8.h"
 #include "encoder.h"
 #include "event.h"
+#include "mcp23s18.h"
 
 /* LUT for mux wiring */
 static const int mux_order[16] = {
 	7, 6, 5, 4, 3, 1, 2, 0, 10, 11, 8, 9, 14, 15, 12, 13
 };
 
+ISR(ENC_VECT)
+{
+	encoder_interrupt();
+}
+
 int
 main(void)
 {
-	int i, x, e;
+	int i, j, x, e;
 	uint8_t ev_type;
 	uint16_t ev_value;
 	char buf[16];
@@ -50,10 +56,11 @@ main(void)
 	spi_setup();
 	//ad56x8_setup(1);
 	encoder_setup();
+	mcp23s18_setup();
 	sei();
 
+#if 0
 	for (x = i = 0;; i++) {
-		//ad56x8_write_update(-1, i);
 		rgbled_n(i);
 		demux_set_line(mux_order[i % 16]);
 		lcd_moveto(0, 0);
@@ -85,6 +92,9 @@ main(void)
 		lcd_moveto(18, 1);
 		lcd_string(rjustify(ntoh(event_maxqueued(), 0), buf, 3));
 
-		_delay_ms((60 * 250)/140);
+		for (j = 0; j < 512; j++)
+			ad56x8_write_update(-1, (j & 1) ? 0xffff : 0);
+		//_delay_ms((60 * 250)/140);
 	}
+#endif
 }
