@@ -22,9 +22,18 @@
 static void
 ad56x8_select(void)
 {
+	spi_clock_phase(0);
 	AD56X8_PORT |= (1 << AD56X8_SS);
 	_delay_us(0.020);
 	AD56X8_PORT &= ~(1 << AD56X8_SS);
+	_delay_us(0.020);
+}
+
+static void
+ad56x8_deselect(void)
+{
+	_delay_us(0.020);
+	AD56X8_PORT |= (1 << AD56X8_SS);
 }
 
 static void
@@ -35,14 +44,15 @@ ad56x8_command(uint8_t a, uint8_t b, uint8_t c, uint8_t d)
 	spi_write(b);
 	spi_write(c);
 	spi_write(d);
-	_delay_us(0.020);
-	ad56x8_select();
+	ad56x8_deselect();
 }
 
 void
 ad56x8_setup(int vref_on)
 {
 	AD56X8_DDR |= (1 << AD56X8_SS);
+	AD56X8_PORT |= (1 << AD56X8_SS);
+
 	ad56x8_command(0x07, 0x00, 0x00, 0x00);
 	if (vref_on)
 		ad56x8_command(0x08, 0x00, 0x00, 0x01);
