@@ -38,7 +38,8 @@ encoder_setup(void)
 	PCICR |= (1 << ENC_PCIE);
 }
 
-ISR(ENC_VECT)
+void
+encoder_interrupt(void)
 {
 	static uint8_t code = 0x03;
 	static int8_t decode_lut[] = {
@@ -63,6 +64,13 @@ ISR(ENC_VECT)
 		pulses = 0;
 	}
 }
+
+#ifdef ENC_INTERRUPT_HANDLER
+ISR(ENC_VECT)
+{
+	encoder_interrupt()
+}
+#endif
 
 int16_t
 encoder_value(void)

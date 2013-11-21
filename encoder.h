@@ -31,6 +31,13 @@
 #define ENC_INT_B		PCINT5
 #define ENC_PULSE_PER_DETENT	4
 
+/*
+ * Define ENC_INTERRUPT_HANDLER if you want this module to set up the
+ * interrupt handler itself. Otherwise, you need to call encoder_interrupt()
+ * from a handler elsewhere.
+ */
+/* #define ENC_INTERRUPT_HANDLER */
+
 /* Setup to use the rotary encoder */
 void encoder_setup(void);
 
@@ -42,6 +49,9 @@ int16_t encoder_value(void);
 
 /* Sets the running counter value */
 void encoder_setvalue(int16_t v);
+
+/* The actual interrupt handler. Use only if ENC_INTERRUPT_HANDLER is unset */
+void encoder_interrupt(void);
 
 #endif /* ENC_H */
 
