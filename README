@@ -1,1 +1,2 @@
-Some code for Atmel AVR MCUs that I find handy.
+This is a small microcontroller project to implement a three-channel
+CV/Gate analogue sequencer.

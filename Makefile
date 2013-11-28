@@ -23,22 +23,22 @@ LIBAVR_OBJS+=mcp23s1x.o
 CC=avr-gcc
 OBJCOPY=avr-objcopy
 
-all: blinky.hex
+all: sequencer.hex
 
-blinky.elf: blinky.o ${LIBAVR_OBJS}
-	${CC} ${CFLAGS} -o $@ blinky.o ${LIBAVR_OBJS}
+sequencer.elf: main.o ${LIBAVR_OBJS}
+	${CC} ${CFLAGS} -o $@ main.o ${LIBAVR_OBJS}
 
-blinky.hex: blinky.elf
-	${OBJCOPY} -j .text -j .data -O ihex blinky.elf $@
+sequencer.hex: sequencer.elf
+	${OBJCOPY} -j .text -j .data -O ihex sequencer.elf $@
 
 load: ${LOADER}
 
-teensy: blinky.hex
-	${SUDO} teensy_loader_cli -w -mmcu=${MCU} blinky.hex
+teensy: sequencer.hex
+	${SUDO} teensy_loader_cli -w -mmcu=${MCU} sequencer.hex
 
-avrdude: blinky.hex
+avrdude: sequencer.hex
 	avrdude -P ${AVRDUDE_PORT} -p ${AVRDUDE_PART} -c ${AVRDUDE_HW} \
-	    ${AVRDUDE_EXTRA} -e -U flash:w:blinky.hex
+	    ${AVRDUDE_EXTRA} -e -U flash:w:sequencer.hex
 
 clean:
 	rm -f *.elf *.hex *.o *.core *.hex
