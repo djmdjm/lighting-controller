@@ -24,17 +24,18 @@
 
 #include "lcd.h"
 
-#if !defined(LCD_DDR) || !defined(LCD_PORT) || !defined(LCD_PIN) || \
-    !defined(LCD_RS) || !defined(LCD_RW) || !defined(LCD_E) || \
-    !defined(LCD_DB4) || !defined(LCD_DB5) || !defined(LCD_DB6) || \
-    !defined(LCD_DB7)
+#if !defined(LCD_CTL_DDR) || !defined(LCD_CTL_PORT) || \
+    !defined(LCD_DB_PIN) || !defined(LCD_DB_DDR) || !defined(LCD_DB_PORT) || \
+    !defined(LCD_CTL_RS) || !defined(LCD_CTL_RW) || \
+    !defined(LCD_EN_DDR) || !defined(LCD_EN_PORT) || !defined(LCD_EN) || \
+    !defined(LCD_DB_4) || !defined(LCD_DB_5) || !defined(LCD_DB_6) || \
+    !defined(LCD_DB_7)
 # error Please define pin/port configuration in lcd.h
 #endif
 
-#define LCD_DB_MASK	((1 << LCD_DB4) | (1 << LCD_DB5) | \
-			 (1 << LCD_DB6) | (1 << LCD_DB7))
-#define LCD_CTL_MASK	((1 << LCD_RS) | (1 << LCD_RW) | (1 << LCD_E))
-#define LCD_MASK	(LCD_DB_MASK | LCD_CTL_MASK)
+#define LCD_DB_MASK	((1 << LCD_DB_4) | (1 << LCD_DB_5) | \
+			 (1 << LCD_DB_6) | (1 << LCD_DB_7))
+#define LCD_CTL_MASK	((1 << LCD_CTL_RS) | (1 << LCD_CTL_RW))
 
 /* LCD constants */
 #define LCD_ROW0_ADDR	0
@@ -79,25 +80,27 @@ static void
 lcd_write4(int rs, uint8_t val)
 {
 	/* We'll be using the DB pins as outputs here */
-	LCD_DDR |= LCD_DB_MASK;
+	LCD_DB_DDR |= LCD_DB_MASK;
 	/* Select register and R/W mode */
-	LCD_PORT = (LCD_PORT & ~LCD_MASK) | (rs ? 1 << LCD_RS : 0);
+	LCD_CTL_PORT = (LCD_CTL_PORT & ~LCD_CTL_MASK) |
+	    (rs ? 1 << LCD_CTL_RS : 0);
 	_delay_us(0.100); /* Tsp1 = 40ns */
 	/* Assert 'enable', send data and hold */
-	LCD_PORT |= (1 << LCD_E);
-	LCD_PORT = (LCD_PORT & ~LCD_DB_MASK) |
-		((val & 0x1) ? 1 << LCD_DB4 : 0) |
-		((val & 0x2) ? 1 << LCD_DB5 : 0) |
-		((val & 0x4) ? 1 << LCD_DB6 : 0) |
-		((val & 0x8) ? 1 << LCD_DB7 : 0);
+	LCD_EN_PORT |= (1 << LCD_EN);
+	LCD_DB_PORT = (LCD_DB_PORT & ~LCD_DB_MASK) |
+		((val & 0x1) ? 1 << LCD_DB_4 : 0) |
+		((val & 0x2) ? 1 << LCD_DB_5 : 0) |
+		((val & 0x4) ? 1 << LCD_DB_6 : 0) |
+		((val & 0x8) ? 1 << LCD_DB_7 : 0);
 	_delay_us(0.250); /* Tpw = 230ns */
 	/* Drop 'enable' while holding data for a period */
-	LCD_PORT &= ~(1 << LCD_E);
+	LCD_EN_PORT &= ~(1 << LCD_EN);
 	_delay_us(0.050); /* Thd2 = 10ns */
 	/* De-assert all signals, float DB lines */
-	LCD_PORT = (LCD_PORT & ~(LCD_CTL_MASK)) | LCD_DB_MASK;
+	LCD_CTL_PORT &= ~LCD_CTL_MASK;
+	LCD_DB_PORT |= LCD_DB_MASK;
 	/* Put DB pins back to HiZ input mode */
-	LCD_DDR &= ~LCD_DB_MASK;
+	LCD_DB_DDR &= ~LCD_DB_MASK;
 	/* Ensure Tc=500ns is satisfied too */
 	_delay_us(0.250); /* In addition to Tpw delay above */
 }
@@ -107,34 +110,38 @@ static void
 lcd_write8(int rs, uint8_t val)
 {
 	/* We'll be using the DB pins as outputs here */
-	LCD_DDR |= LCD_DB_MASK;
+	LCD_DB_DDR |= LCD_DB_MASK;
 	/* Select register and R/W mode */
-	LCD_PORT = (LCD_PORT & ~LCD_MASK) | (rs ? 1 << LCD_RS : 0);
+	LCD_CTL_PORT = (LCD_CTL_PORT & ~LCD_CTL_MASK) |
+	    (rs ? 1 << LCD_CTL_RS : 0);
 	_delay_us(0.100); /* Tsp1 = 40ns */
 	/* Assert 'enable', send data MSB and hold */
-	LCD_PORT = (LCD_PORT & ~LCD_DB_MASK) | (1 << LCD_E) |
-		((val & 0x10) ? 1 << LCD_DB4 : 0) |
-		((val & 0x20) ? 1 << LCD_DB5 : 0) |
-		((val & 0x40) ? 1 << LCD_DB6 : 0) |
-		((val & 0x80) ? 1 << LCD_DB7 : 0);
+	LCD_EN_PORT |= (1 << LCD_EN);
+	LCD_DB_PORT = (LCD_DB_PORT & ~LCD_DB_MASK) |
+		((val & 0x10) ? 1 << LCD_DB_4 : 0) |
+		((val & 0x20) ? 1 << LCD_DB_5 : 0) |
+		((val & 0x40) ? 1 << LCD_DB_6 : 0) |
+		((val & 0x80) ? 1 << LCD_DB_7 : 0);
 	_delay_us(0.250); /* Tpw = 230ns */
 	/* Drop 'enable' while holding data for a period */
-	LCD_PORT &= ~(1 << LCD_E);
+	LCD_EN_PORT &= ~(1 << LCD_EN);
 	_delay_us(0.050); /* Thd2 = 10ns */
 	/* Reassert 'enable' and send data LSB */
-	LCD_PORT = (LCD_PORT & ~LCD_DB_MASK) | (1 << LCD_E) |
-		((val & 0x01) ? 1 << LCD_DB4 : 0) |
-		((val & 0x02) ? 1 << LCD_DB5 : 0) |
-		((val & 0x04) ? 1 << LCD_DB6 : 0) |
-		((val & 0x08) ? 1 << LCD_DB7 : 0);
+	LCD_EN_PORT |= (1 << LCD_EN);
+	LCD_DB_PORT = (LCD_DB_PORT & ~LCD_DB_MASK) |
+		((val & 0x01) ? 1 << LCD_DB_4 : 0) |
+		((val & 0x02) ? 1 << LCD_DB_5 : 0) |
+		((val & 0x04) ? 1 << LCD_DB_6 : 0) |
+		((val & 0x08) ? 1 << LCD_DB_7 : 0);
 	_delay_us(0.250); /* Tpw = 230ns */
 	/* Drop 'enable' while holding data for a period */
-	LCD_PORT &= ~(1 << LCD_E);
+	LCD_EN_PORT &= ~(1 << LCD_EN);
 	_delay_us(0.050); /* Thd2 = 10ns */
 	/* De-assert all signals, float DB lines */
-	LCD_PORT = (LCD_PORT & ~(LCD_CTL_MASK)) | LCD_DB_MASK;
+	LCD_CTL_PORT &= ~LCD_CTL_MASK;
+	LCD_DB_PORT |= LCD_DB_MASK;
 	/* Put DB pins back to HiZ input mode */
-	LCD_DDR &= ~LCD_DB_MASK;
+	LCD_DB_DDR &= ~LCD_DB_MASK;
 	/* Ensure Tc=500ns is satisfied too */
 	_delay_us(0.250); /* In addition to Tpw delay above */
 }
@@ -146,34 +153,35 @@ lcd_read8(int rs)
 	uint8_t pin_h, pin_l;
 
 	/* Select register and R/W mode */
-	LCD_PORT = (LCD_PORT & ~LCD_CTL_MASK) |
-	    (rs ? (1 << LCD_RS) : 0) | (1 << LCD_RW);
+	LCD_CTL_PORT = (LCD_CTL_PORT & ~LCD_CTL_MASK) |
+	    (rs ? (1 << LCD_CTL_RS) : 0) | (1 << LCD_CTL_RW);
 	/* We'll be using the DB pins as inputs here */
-	LCD_DDR &= ~LCD_DB_MASK;
+	LCD_DB_DDR &= ~LCD_DB_MASK;
 	_delay_us(0.100); /* Tsp1 = 40ns */
 	/* Assert 'enable' and hold for data */
-	LCD_PORT |= (1 << LCD_E);
+	LCD_EN_PORT |= (1 << LCD_EN);
 	_delay_us(0.500); /* Td = 120ns, also satisfies Tpw=230ns, Tc=500ns */
-	pin_h = LCD_PIN;
+	pin_h = LCD_DB_PIN;
 	/* Toggle 'enable' */
-	LCD_PORT &= ~(1 << LCD_E);
+	LCD_EN_PORT &= ~(1 << LCD_EN);
 	_delay_us(0.050); /* Thd1 = 10ns */
-	LCD_PORT |= (1 << LCD_E);
+	LCD_EN_PORT |= (1 << LCD_EN);
 	_delay_us(0.500); /* Td = 120ns, also satisfies Tpw=230ns, Tc=500ns */
-	pin_l = LCD_PIN;
+	pin_l = LCD_DB_PIN;
 	/* Drop 'enable' */
-	LCD_PORT &= ~(1 << LCD_E);
+	LCD_EN_PORT &= ~(1 << LCD_EN);
 	_delay_us(0.050); /* Thd1 = 10ns */
 	/* De-assert all signals, float DB lines */
-	LCD_PORT = (LCD_PORT & ~(LCD_CTL_MASK)) | LCD_DB_MASK;
-	return ((pin_l & (1 << LCD_DB4)) ? 0x01 : 0) |
-	    ((pin_l & (1 << LCD_DB5)) ? 0x02 : 0) |
-	    ((pin_l & (1 << LCD_DB6)) ? 0x04 : 0) |
-	    ((pin_l & (1 << LCD_DB7)) ? 0x08 : 0) |
-	    ((pin_h & (1 << LCD_DB4)) ? 0x10 : 0) |
-	    ((pin_h & (1 << LCD_DB5)) ? 0x20 : 0) |
-	    ((pin_h & (1 << LCD_DB6)) ? 0x40 : 0) |
-	    ((pin_h & (1 << LCD_DB7)) ? 0x80 : 0);
+	LCD_CTL_PORT &= ~LCD_CTL_MASK;
+	LCD_DB_PORT |= LCD_DB_MASK;
+	return ((pin_l & (1 << LCD_DB_4)) ? 0x01 : 0) |
+	    ((pin_l & (1 << LCD_DB_5)) ? 0x02 : 0) |
+	    ((pin_l & (1 << LCD_DB_6)) ? 0x04 : 0) |
+	    ((pin_l & (1 << LCD_DB_7)) ? 0x08 : 0) |
+	    ((pin_h & (1 << LCD_DB_4)) ? 0x10 : 0) |
+	    ((pin_h & (1 << LCD_DB_5)) ? 0x20 : 0) |
+	    ((pin_h & (1 << LCD_DB_6)) ? 0x40 : 0) |
+	    ((pin_h & (1 << LCD_DB_7)) ? 0x80 : 0);
 }
 
 /* Wait until the LCD card's busy flag is clear; return the current address */
@@ -291,8 +299,11 @@ lcd_string(const char *s)
 void
 lcd_setup(void)
 {
-	LCD_DDR |= LCD_CTL_MASK;
-	LCD_PORT &= ~(LCD_CTL_MASK);
+	LCD_CTL_DDR |= LCD_CTL_MASK;
+	LCD_DB_DDR |= LCD_DB_MASK;
+	LCD_EN_DDR |= (1 << LCD_EN);
+	LCD_CTL_PORT &= ~LCD_CTL_MASK;
+	LCD_EN_PORT &= ~(1 << LCD_EN);
 	/* Ensure LCD has had enough time to settle */
 	_delay_ms(100);
 	/* Put it into 4-bit mode */

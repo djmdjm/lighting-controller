@@ -22,17 +22,26 @@
 #define LCD_ROWS	2
 #define LCD_COLS	20
 
-/* Pin/port configuration. Limitation: all pins must be on the same port */
-#define LCD_DDR		DDRD
-#define LCD_PORT	PORTD
-#define LCD_PIN		PIND
-#define LCD_RS		0
-#define LCD_RW		1
-#define LCD_E		2
-#define LCD_DB4		3
-#define LCD_DB5		4
-#define LCD_DB6		5
-#define LCD_DB7		6
+/*
+ * Pin/port configuration. It's possible to have the control and data signals
+ * on different ports.
+ */
+#define LCD_CTL_DDR	DDRF
+#define LCD_CTL_PORT	PORTF
+#define LCD_CTL_RS	6
+#define LCD_CTL_RW	7
+
+#define LCD_EN_DDR	DDRD
+#define LCD_EN_PORT	PORTD
+#define LCD_EN		7
+
+#define LCD_DB_DDR	DDRF
+#define LCD_DB_PORT	PORTF
+#define LCD_DB_PIN	PINF
+#define LCD_DB_4	0
+#define LCD_DB_5	1
+#define LCD_DB_6	4
+#define LCD_DB_7	5
 
 /* LCD special characters */
 #define LCD_CHAR_ARROW_R	0x7e
