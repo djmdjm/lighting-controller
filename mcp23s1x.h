@@ -1,5 +1,5 @@
-#ifndef MCP23S18_H
-#define MCP23S18_H
+#ifndef MCP23S1X_H
+#define MCP23S1X_H
 
 /*
  * Copyright (c) 2013 Damien Miller <djm@mindrot.org>
@@ -17,54 +17,46 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-/* Driver for Microchip MCP23S18 16-port SPI IO multiplexer */
+/* Driver for Microchip MCP23S1x 16-port SPI IO multiplexer */
 
-#define MCP23S18_PORT		PORTB
-#define MCP23S18_DDR		DDRB
-#define MCP23S18_SS		0
-#define MCP23S18_INT_PORT	PORTB
-#define MCP23S18_INT_PIN	PINB
-#define MCP23S18_INT_PCMSK	PCMSK0
-#define MCP23S18_INT_PCIE	PCIE0
-#define MCP23S18_INT_PIN_A	0
-#define MCP23S18_INT_PIN_B	4
-#define MCP23S18_INT_A		PCINT0
-#define MCP23S18_INT_B		PCINT4
+#define MCP23S1X_PORT		PORTB
+#define MCP23S1X_DDR		DDRB
+#define MCP23S1X_SS		0
+
+#if 0
+#define MCP23S1X_INT_PORT	PORTB
+#define MCP23S1X_INT_PIN	PINB
+#define MCP23S1X_INT_PCMSK	PCMSK0
+#define MCP23S1X_INT_PCIE	PCIE0
+#define MCP23S1X_INT_PIN_A	0
+#define MCP23S1X_INT_PIN_B	4
+#define MCP23S1X_INT_A		PCINT0
+#define MCP23S1X_INT_B		PCINT4
+#endif
 
 /*
- * Define MCP23S18_INTERRUPT_HANDLER if you want this module to set up the
- * interrupt handler itself. Otherwise, you need to call mcp23s18_interrupt()
+ * Define MCP23S1X_INTERRUPT_HANDLER if you want this module to set up the
+ * interrupt handler itself. Otherwise, you need to call mcp23s1x_interrupt()
  * from a handler elsewhere.
  */
-/* #define MCP23S18_INTERRUPT_HANDLER */
+/* #define MCP23S1X_INTERRUPT_HANDLER */
 
-/* Set up the MCP23S18 */
-void mcp23s18_setup(void);
-
-/*
- * Select port direction for each 8-wire port, with the LSB representing the
- * lowest-numbered GPIO line. A set bit represents output, clear for input.
- */
-void mcp23s18_direction(uint8_t cpa_dir, uint8_t gpb_dir);
+/* Set up the MCP23S1X */
+void mcp23s1x_setup(void);
 
 /*
- * Configure interrupts mode for each port. A set bit requests interupts for
- * that pin, which will be delivered on the corresponding interrupt line.
- * When requesting interrupts, it is also necessary to specify the mode
- * and/or a comparison value for those pins. When the pin's mode bit it set,
- * Interrupts are raised when the input differs from the comparison value.
- * If the pin's mode bit is clear, an interrupt is generated whenever the
- * pin changes state.
+ * Select port direction for both 8-wire ports, with the MSB representing
+ * GPA7, descending to GPA0, then descending from GPB7 to the LSB representing
+ * GPB0. A set bit represents output.
  */
-void mcp23s18_config_interrupt(uint8_t cpa_int, uint8_t cpa_mode,
-    uint8_t cpa_comp, uint8_t cpb_int, uint8_t cpb_mode, uint8_t cpb_comp);
+void mcp23s1x_set_iodir(uint8_t addr, uint16_t iodir);
 
-/*
- * The actual interrupt handler. Use only if MCP23S18_INTERRUPT_HANDLER
- * is unset
- */
-void mcp23s18_interrupt(void);
+/* Set the GPIO output pins. Same numbering as mcp23s1x_set_iodir() */
+void mcp23s1x_set_gpio(uint8_t addr, uint16_t val);
 
-#endif /* MCP23S18_H */
+/* Read the current status of the GPIO pins */
+uint16_t mcp23s1x_get_pins(uint8_t addr);
+
+#endif /* MCP23S1X_H */
 
 
