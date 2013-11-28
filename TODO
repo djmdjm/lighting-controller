@@ -1,0 +1,18 @@
+complete analogue side of board
+
+complete on-board PSU (15 VAC -> 12, 5 VDC)
+
+crank prescaler up to 16Mhz
+
+interrupt handler for switches
+  -> hook up to events
+
+MIDI in
+	USB and/or DIN?
+
+mainloop
+
+UI
+	plain main functions
+	double-click events for per-channel switches
+	autoblink for per-channel switches
