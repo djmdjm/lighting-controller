@@ -30,71 +30,91 @@
 #include "ad56x8.h"
 #include "encoder.h"
 #include "event.h"
-#include "mcp23s18.h"
-
-/* LUT for mux wiring */
-static const int mux_order[16] = {
-	7, 6, 5, 4, 3, 1, 2, 0, 10, 11, 8, 9, 14, 15, 12, 13
-};
+#include "mcp23s1x.h"
 
 ISR(ENC_VECT)
 {
 	encoder_interrupt();
 }
 
+struct channel_map {
+	int addr;
+	int pin;
+};
+struct channel_map channel_a[16] = {
+	{ 0x4, 0 }, { 0x4, 4 }, { 0x4, 11 }, { 0x4, 15 },
+	{ 0x5, 4 }, { 0x5, 0 }, { 0x5, 15 }, { 0x5, 11 },
+	{ 0x4, 1 }, { 0x4, 5 }, { 0x4, 10 }, { 0x4, 14 },
+	{ 0x5, 5 }, { 0x5, 1 }, { 0x5, 14 }, { 0x5, 10 },
+};
+struct channel_map channel_b[8] = {
+	{ 0x4, 2 }, { 0x4, 6 }, { 0x4, 9 }, { 0x4, 13 },
+	{ 0x5, 6 }, { 0x5, 2 }, { 0x5, 13 }, { 0x5, 9 },
+};
+struct channel_map channel_c[8] = {
+	{ 0x4, 3 }, { 0x4, 7 }, { 0x4, 8 }, { 0x4, 12 },
+	{ 0x5, 7 }, { 0x5, 3 }, { 0x5, 12 }, { 0x5, 8 },
+};
+
 int
 main(void)
 {
-	int i, j, x, e;
-	uint8_t ev_type;
-	uint16_t ev_value;
-	char buf[16];
+	uint16_t i, a, b, c, v4, v5, p;
+	char buf[3];
 
-	demux_setup();
-	rgbled_setup();
+	CLKPR = 0x80;
+	CLKPR = 0x03; /* 2 MHz */
+//#define lcd_setup()
+//#define lcd_moveto(a,b)
+//#define lcd_string(a)
 	lcd_setup();
 	spi_setup();
-	//ad56x8_setup(1);
-	encoder_setup();
-	mcp23s18_setup();
+	mcp23s1x_setup();
 	sei();
 
-#if 0
-	for (x = i = 0;; i++) {
-		rgbled_n(i);
-		demux_set_line(mux_order[i % 16]);
+	mcp23s1x_set_iodir(0x4, 0xffff);
+	mcp23s1x_set_iodir(0x5, 0xffff);
+	mcp23s1x_set_iodir(0x6, 0x00ff);
+
+///* XXX */ DDRD |= 1<<6;
+	for (i = a = b = c = 0; ; i++) {
+///* XXX */	PORTD = PORTD ^ (1<<6);
+		v4  = (channel_a[a].addr == 0x4) ? (1 << channel_a[a].pin) : 0;
+		v4 |= (channel_b[b].addr == 0x4) ? (1 << channel_b[b].pin) : 0;
+		v4 |= (channel_c[c].addr == 0x4) ? (1 << channel_c[c].pin) : 0;
+
+		v5  = (channel_a[a].addr == 0x5) ? (1 << channel_a[a].pin) : 0;
+		v5 |= (channel_b[b].addr == 0x5) ? (1 << channel_b[b].pin) : 0;
+		v5 |= (channel_c[c].addr == 0x5) ? (1 << channel_c[c].pin) : 0;
+
+		mcp23s1x_set_gpio(0x4, v4);
+		mcp23s1x_set_gpio(0x5, v5);
+		//mcp23s1x_set_gpio(0x6, 1 << (i % 5));
+		p = mcp23s1x_get_pins(0x6);
+		mcp23s1x_set_gpio(0x6, 
+			!(p & (1 << 15)) << 0 |
+			!(p & (1 << 14)) << 1 |
+			!(p & (1 << 13)) << 2 |
+			!(p & (1 << 12)) << 3 |
+			!(p & (1 << 11)) << 4 |
+			((p & (1 << 10)) ? 0x0 : 0xff));
+
 		lcd_moveto(0, 0);
-		lcd_string(rjustify(ntod(i), buf, 7));
-		lcd_string(" Julius & Hugo");
-
+		lcd_string("Analogue Sequence Test");
 		lcd_moveto(0, 1);
-		lcd_string(rjustify(ntod(encoder_value()), buf, 7));
+		lcd_string("a = ");
+		lcd_string(rjustify(ntod(a), buf, 3));
+		lcd_string(" b = ");
+		lcd_string(rjustify(ntod(b), buf, 3));
+		lcd_string(" c = ");
+		lcd_string(rjustify(ntod(c), buf, 3));
 
-		e = event_dequeue(&ev_type, &ev_value);
-		while (event_dequeue(NULL, NULL))
-			;
-		if (e != 0 || x-- == 0) {
-			if (e != 0) {
-				lcd_moveto(7, 1);
-				lcd_string(rjustify(ntoh(ev_type, 0), buf, 3));
-				lcd_string(" ");
-				lcd_string(rjustify(ntoh(ev_value, 0), buf, 5));
-				x = 16;
-			} else {
-				lcd_moveto(7, 1);
-				lcd_string("       ");
-			}
-		}
+		_delay_ms(107);
 
-		lcd_moveto(15, 1);
-		lcd_string(rjustify(ntoh(event_nqueued(), 0), buf, 3));
-
-		lcd_moveto(18, 1);
-		lcd_string(rjustify(ntoh(event_maxqueued(), 0), buf, 3));
-
-		for (j = 0; j < 512; j++)
-			ad56x8_write_update(-1, (j & 1) ? 0xffff : 0);
-		//_delay_ms((60 * 250)/140);
+		a = (a + 1) & 0xf;
+		if ((i % 2) == 0)
+			b = (b + 1) & 0x7;
+		if ((i % 4) == 0)
+			c = (c + 1) & 0x7;
 	}
-#endif
 }
