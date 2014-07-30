@@ -225,57 +225,7 @@
 <wire x1="2.54" y1="8.89" x2="2.54" y2="2.54" width="0.3048" layer="21"/>
 <wire x1="5.08" y1="8.89" x2="5.08" y2="2.54" width="0.3048" layer="21"/>
 </package>
-<package name="TO-220ACS">
-<description>TO-220AC vertical</description>
-<wire x1="5.08" y1="1.397" x2="4.953" y2="-1.524" width="0.1524" layer="21"/>
-<wire x1="4.699" y1="-1.778" x2="4.953" y2="-1.524" width="0.1524" layer="21"/>
-<wire x1="4.699" y1="-1.778" x2="-4.699" y2="-1.778" width="0.1524" layer="21"/>
-<wire x1="-4.953" y1="-1.524" x2="-4.699" y2="-1.778" width="0.1524" layer="21"/>
-<wire x1="-4.953" y1="-1.524" x2="-5.08" y2="1.397" width="0.1524" layer="21"/>
-<circle x="-4.4958" y="-1.1684" radius="0.254" width="0" layer="21"/>
-<pad name="C" x="-2.54" y="0" drill="1.016" shape="long" rot="R90"/>
-<pad name="A" x="2.54" y="0" drill="1.016" shape="long" rot="R90"/>
-<text x="-5.08" y="-3.5052" size="1.27" layer="25" ratio="10">&gt;NAME</text>
-<text x="-5.08" y="-5.08" size="1.27" layer="27" ratio="10">&gt;VALUE</text>
-<rectangle x1="-5.334" y1="1.778" x2="5.334" y2="2.54" layer="21"/>
-<rectangle x1="-5.334" y1="1.27" x2="-3.429" y2="1.778" layer="21"/>
-<rectangle x1="-3.429" y1="1.27" x2="-1.651" y2="1.778" layer="51"/>
-<rectangle x1="3.429" y1="1.27" x2="5.334" y2="1.778" layer="21"/>
-<rectangle x1="1.651" y1="1.27" x2="3.429" y2="1.778" layer="51"/>
-<rectangle x1="-1.651" y1="1.27" x2="1.651" y2="1.778" layer="21"/>
-</package>
-<package name="TO-220AC">
-<description>TO-220AC</description>
-<wire x1="-5.207" y1="-5.08" x2="5.207" y2="-5.08" width="0.1524" layer="21"/>
-<wire x1="5.207" y1="10.795" x2="-5.207" y2="10.795" width="0.1524" layer="21"/>
-<wire x1="5.207" y1="-5.08" x2="5.207" y2="7.366" width="0.1524" layer="21"/>
-<wire x1="5.207" y1="7.366" x2="4.318" y2="7.366" width="0.1524" layer="21"/>
-<wire x1="4.318" y1="7.366" x2="4.318" y2="8.89" width="0.1524" layer="21"/>
-<wire x1="4.318" y1="8.89" x2="5.207" y2="8.89" width="0.1524" layer="21"/>
-<wire x1="5.207" y1="8.89" x2="5.207" y2="10.795" width="0.1524" layer="21"/>
-<wire x1="-5.207" y1="-5.08" x2="-5.207" y2="7.366" width="0.1524" layer="21"/>
-<wire x1="-5.207" y1="7.366" x2="-4.318" y2="7.366" width="0.1524" layer="21"/>
-<wire x1="-4.318" y1="7.366" x2="-4.318" y2="8.89" width="0.1524" layer="21"/>
-<wire x1="-4.318" y1="8.89" x2="-5.207" y2="8.89" width="0.1524" layer="21"/>
-<wire x1="-5.207" y1="8.89" x2="-5.207" y2="10.795" width="0.1524" layer="21"/>
-<wire x1="-4.572" y1="-4.445" x2="4.572" y2="-4.445" width="0.0508" layer="21"/>
-<wire x1="4.572" y1="3.81" x2="4.572" y2="-4.445" width="0.0508" layer="21"/>
-<wire x1="4.572" y1="3.81" x2="-4.572" y2="3.81" width="0.0508" layer="21"/>
-<wire x1="-4.572" y1="-4.445" x2="-4.572" y2="3.81" width="0.0508" layer="21"/>
-<circle x="0" y="7.366" radius="1.8034" width="0.1524" layer="21"/>
-<pad name="C" x="-2.54" y="-10.16" drill="1.1176" shape="long" rot="R90"/>
-<pad name="A" x="2.54" y="-10.16" drill="1.1176" shape="long" rot="R90"/>
-<text x="-5.461" y="-5.08" size="1.778" layer="25" ratio="10" rot="R90">&gt;NAME</text>
-<text x="-3.937" y="-1.27" size="1.778" layer="27" ratio="10">&gt;VALUE</text>
-<text x="-4.445" y="4.064" size="0.9906" layer="21" ratio="10">A17,5mm</text>
-<rectangle x1="2.159" y1="-8.255" x2="2.921" y2="-7.62" layer="21"/>
-<rectangle x1="-2.921" y1="-8.255" x2="-2.159" y2="-7.62" layer="21"/>
-<rectangle x1="-3.175" y1="-7.62" x2="-1.905" y2="-5.08" layer="21"/>
-<rectangle x1="1.905" y1="-7.62" x2="3.175" y2="-5.08" layer="21"/>
-<rectangle x1="2.159" y1="-10.16" x2="2.921" y2="-8.255" layer="51"/>
-<rectangle x1="-2.921" y1="-10.16" x2="-2.159" y2="-8.255" layer="51"/>
-</package>
-<package name="TO-220ACS-HS">
+<package name="TO-220CAS-HS">
 <wire x1="5.08" y1="1.397" x2="4.953" y2="-1.524" width="0.1524" layer="21"/>
 <wire x1="4.699" y1="-1.778" x2="4.953" y2="-1.524" width="0.1524" layer="21"/>
 <wire x1="4.699" y1="-1.778" x2="-4.699" y2="-1.778" width="0.1524" layer="21"/>
@@ -307,6 +257,56 @@
 <wire x1="0" y1="8.89" x2="0" y2="2.54" width="0.3048" layer="21"/>
 <wire x1="2.54" y1="8.89" x2="2.54" y2="2.54" width="0.3048" layer="21"/>
 <wire x1="5.08" y1="8.89" x2="5.08" y2="2.54" width="0.3048" layer="21"/>
+</package>
+<package name="TO-220CAS">
+<description>TO-220AC vertical</description>
+<wire x1="5.08" y1="1.397" x2="4.953" y2="-1.524" width="0.1524" layer="21"/>
+<wire x1="4.699" y1="-1.778" x2="4.953" y2="-1.524" width="0.1524" layer="21"/>
+<wire x1="4.699" y1="-1.778" x2="-4.699" y2="-1.778" width="0.1524" layer="21"/>
+<wire x1="-4.953" y1="-1.524" x2="-4.699" y2="-1.778" width="0.1524" layer="21"/>
+<wire x1="-4.953" y1="-1.524" x2="-5.08" y2="1.397" width="0.1524" layer="21"/>
+<circle x="-4.4958" y="-1.1684" radius="0.254" width="0" layer="21"/>
+<pad name="C" x="-2.54" y="0" drill="1.016" shape="long" rot="R90"/>
+<pad name="A" x="2.54" y="0" drill="1.016" shape="long" rot="R90"/>
+<text x="-5.08" y="-3.5052" size="1.27" layer="25" ratio="10">&gt;NAME</text>
+<text x="-5.08" y="-5.08" size="1.27" layer="27" ratio="10">&gt;VALUE</text>
+<rectangle x1="-5.334" y1="1.778" x2="5.334" y2="2.54" layer="21"/>
+<rectangle x1="-5.334" y1="1.27" x2="-3.429" y2="1.778" layer="21"/>
+<rectangle x1="-3.429" y1="1.27" x2="-1.651" y2="1.778" layer="51"/>
+<rectangle x1="3.429" y1="1.27" x2="5.334" y2="1.778" layer="21"/>
+<rectangle x1="1.651" y1="1.27" x2="3.429" y2="1.778" layer="51"/>
+<rectangle x1="-1.651" y1="1.27" x2="1.651" y2="1.778" layer="21"/>
+</package>
+<package name="TO-220CA">
+<description>TO-220AC</description>
+<wire x1="-5.207" y1="-5.08" x2="5.207" y2="-5.08" width="0.1524" layer="21"/>
+<wire x1="5.207" y1="10.795" x2="-5.207" y2="10.795" width="0.1524" layer="21"/>
+<wire x1="5.207" y1="-5.08" x2="5.207" y2="7.366" width="0.1524" layer="21"/>
+<wire x1="5.207" y1="7.366" x2="4.318" y2="7.366" width="0.1524" layer="21"/>
+<wire x1="4.318" y1="7.366" x2="4.318" y2="8.89" width="0.1524" layer="21"/>
+<wire x1="4.318" y1="8.89" x2="5.207" y2="8.89" width="0.1524" layer="21"/>
+<wire x1="5.207" y1="8.89" x2="5.207" y2="10.795" width="0.1524" layer="21"/>
+<wire x1="-5.207" y1="-5.08" x2="-5.207" y2="7.366" width="0.1524" layer="21"/>
+<wire x1="-5.207" y1="7.366" x2="-4.318" y2="7.366" width="0.1524" layer="21"/>
+<wire x1="-4.318" y1="7.366" x2="-4.318" y2="8.89" width="0.1524" layer="21"/>
+<wire x1="-4.318" y1="8.89" x2="-5.207" y2="8.89" width="0.1524" layer="21"/>
+<wire x1="-5.207" y1="8.89" x2="-5.207" y2="10.795" width="0.1524" layer="21"/>
+<wire x1="-4.572" y1="-4.445" x2="4.572" y2="-4.445" width="0.0508" layer="21"/>
+<wire x1="4.572" y1="3.81" x2="4.572" y2="-4.445" width="0.0508" layer="21"/>
+<wire x1="4.572" y1="3.81" x2="-4.572" y2="3.81" width="0.0508" layer="21"/>
+<wire x1="-4.572" y1="-4.445" x2="-4.572" y2="3.81" width="0.0508" layer="21"/>
+<circle x="0" y="7.366" radius="1.8034" width="0.1524" layer="21"/>
+<pad name="C" x="-2.54" y="-10.16" drill="1.1176" shape="long" rot="R90"/>
+<pad name="A" x="2.54" y="-10.16" drill="1.1176" shape="long" rot="R90"/>
+<text x="-5.461" y="-5.08" size="1.778" layer="25" ratio="10" rot="R90">&gt;NAME</text>
+<text x="-3.937" y="-1.27" size="1.778" layer="27" ratio="10">&gt;VALUE</text>
+<text x="-4.445" y="4.064" size="0.9906" layer="21" ratio="10">A17,5mm</text>
+<rectangle x1="2.159" y1="-8.255" x2="2.921" y2="-7.62" layer="21"/>
+<rectangle x1="-2.921" y1="-8.255" x2="-2.159" y2="-7.62" layer="21"/>
+<rectangle x1="-3.175" y1="-7.62" x2="-1.905" y2="-5.08" layer="21"/>
+<rectangle x1="1.905" y1="-7.62" x2="3.175" y2="-5.08" layer="21"/>
+<rectangle x1="2.159" y1="-10.16" x2="2.921" y2="-8.255" layer="51"/>
+<rectangle x1="-2.921" y1="-10.16" x2="-2.159" y2="-8.255" layer="51"/>
 </package>
 </packages>
 <symbols>
@@ -454,7 +454,7 @@
 </device>
 </devices>
 </deviceset>
-<deviceset name="LITTELFUSE325" prefix="F">
+<deviceset name="LITTELFUSE325" prefix="FUSE">
 <description>&lt;B&gt;Littelfuse 325-series leaded fuse&lt;/B&gt;
 &lt;p&gt;Ceramic fuse from Littelfuse.&lt;p&gt;
 &lt;p&gt;Taken from &lt;a href="http://www.farnell.com/datasheets/48457.pdf"&gt;http://www.farnell.com/datasheets/48457.pdf&lt;/a&gt;&lt;/p&gt;</description>
@@ -540,7 +540,7 @@
 <gate name="G$1" symbol="DIODE" x="0" y="0"/>
 </gates>
 <devices>
-<device name="" package="TO-220ACS">
+<device name="" package="TO-220CAS">
 <connects>
 <connect gate="G$1" pin="A" pad="A"/>
 <connect gate="G$1" pin="C" pad="C"/>
@@ -549,7 +549,7 @@
 <technology name=""/>
 </technologies>
 </device>
-<device name="HORIZONTAL" package="TO-220AC">
+<device name="HORIZONTAL" package="TO-220CA">
 <connects>
 <connect gate="G$1" pin="A" pad="A"/>
 <connect gate="G$1" pin="C" pad="C"/>
@@ -558,7 +558,7 @@
 <technology name=""/>
 </technologies>
 </device>
-<device name="HEATSINK" package="TO-220ACS-HS">
+<device name="HEATSINK" package="TO-220CAS-HS">
 <connects>
 <connect gate="G$1" pin="A" pad="A"/>
 <connect gate="G$1" pin="C" pad="C"/>

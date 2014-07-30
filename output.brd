@@ -196,7 +196,7 @@ Max 50VDC 20A
 <wire x1="2.54" y1="8.89" x2="2.54" y2="2.54" width="0.3048" layer="21"/>
 <wire x1="5.08" y1="8.89" x2="5.08" y2="2.54" width="0.3048" layer="21"/>
 </package>
-<package name="TO-220ACS-HS">
+<package name="TO-220CAS-HS">
 <wire x1="5.08" y1="1.397" x2="4.953" y2="-1.524" width="0.1524" layer="21"/>
 <wire x1="4.699" y1="-1.778" x2="4.953" y2="-1.524" width="0.1524" layer="21"/>
 <wire x1="4.699" y1="-1.778" x2="-4.699" y2="-1.778" width="0.1524" layer="21"/>
@@ -1683,7 +1683,7 @@ Please make sure your boards conform to these design rules.</description>
 <element name="OUT-" library="wirepad" package="2,54/1,1" value="" x="3.81" y="11.43" rot="R90"/>
 <element name="Q1" library="djm" package="TO-220BV-HS" value="FQP30N06L" x="43.18" y="13.97" rot="R270"/>
 <element name="SCR1" library="djm" package="TO-220V-HS" value="SK055R" x="31.75" y="13.97" rot="R90"/>
-<element name="D2" library="djm" package="TO-220ACS-HS" value="RHRP3060" x="11.43" y="13.97" rot="R270"/>
+<element name="D2" library="djm" package="TO-220CAS-HS" value="RHRP3060" x="11.43" y="13.97" rot="R270"/>
 <element name="JP1" library="pinhead" package="1X05" value="" x="74.93" y="13.97" smashed="yes" rot="R270">
 <attribute name="NAME" x="74.8538" y="24.2062" size="1.27" layer="25" ratio="10" rot="R270"/>
 <attribute name="VALUE" x="71.755" y="20.32" size="1.27" layer="27" rot="R270"/>
