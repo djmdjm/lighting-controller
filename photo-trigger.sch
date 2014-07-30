@@ -705,7 +705,7 @@ at 27/07/2012 14:02:49</description>
 </device>
 </devices>
 </deviceset>
-<deviceset name="RECOMREE-0505S" prefix="VR">
+<deviceset name="RECOM-REE-0505S" prefix="VR">
 <description>&lt;B&gt;RECOM REE-0505S&lt;/b&gt;
 &lt;p&gt;Isolating DC/DC converter. Output 5VDC 200mA. Input 5VDC&lt;/p&gt;
 &lt;p&gt;&lt;a href="http://docs-asia.electrocomponents.com/webdocs/11da/0900766b811da244.pdf"&gt;http://docs-asia.electrocomponents.com/webdocs/11da/0900766b811da244.pdf&lt;/a&gt;&lt;/p&gt;</description>
@@ -14194,14 +14194,14 @@ DIN A4, landscape with extra doc field</description>
 <part name="GND18" library="supply1" deviceset="GND" device=""/>
 <part name="GND19" library="supply1" deviceset="GNDIO" device=""/>
 <part name="P+11" library="supply1" deviceset="+5V" device=""/>
-<part name="VR2" library="djm" deviceset="RECOMREE-0505S" device=""/>
+<part name="VR2" library="djm" deviceset="RECOM-REE-0505S" device=""/>
 <part name="C3" library="rcl" deviceset="C-EU" device="050-035X075" value="0.1uF"/>
 <part name="C1" library="rcl" deviceset="C-EU" device="050-035X075" value="0.1uF"/>
 <part name="GNDI1" library="supply1" deviceset="GNDI" device=""/>
 <part name="VDD1" library="supply1" deviceset="VDD" device=""/>
 <part name="GND2" library="supply1" deviceset="GNDIO" device=""/>
 <part name="P+2" library="supply1" deviceset="+5V" device=""/>
-<part name="VR1" library="djm" deviceset="RECOMREE-0505S" device=""/>
+<part name="VR1" library="djm" deviceset="RECOM-REE-0505S" device=""/>
 <part name="FRAME1" library="frames" deviceset="DINA4_L" device=""/>
 <part name="FRAME2" library="frames" deviceset="DINA4_L" device=""/>
 <part name="FRAME3" library="frames" deviceset="DINA4_L" device=""/>
