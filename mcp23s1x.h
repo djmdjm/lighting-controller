@@ -48,14 +48,43 @@ void mcp23s1x_setup(void);
  * Select port direction for both 8-wire ports, with the MSB representing
  * GPA7, descending to GPA0, then descending from GPB7 to the LSB representing
  * GPB0. A set bit represents output.
+ * Setting flip_polarity causes the input pins' values to be flipped on read.
  */
-void mcp23s1x_set_iodir(uint8_t addr, uint16_t iodir);
+void mcp23s1x_set_iodir(uint8_t addr, uint16_t iodir, int flip_polarity);
 
 /* Set the GPIO output pins. Same numbering as mcp23s1x_set_iodir() */
 void mcp23s1x_set_gpio(uint8_t addr, uint16_t val);
 
-/* Read the current status of the GPIO pins */
+/*
+ * Read the current status of the GPIO pins. Reading the GPIO will clear the
+ * contents of the interrupt flag register (see mcp23s1x_get_interrupt_pins()
+ * below).
+ */
 uint16_t mcp23s1x_get_pins(uint8_t addr);
+
+/*
+ * Configures interrupts for both ports. 'pins' specifies which input
+ * pins should be configured to interrupt. 'mode' specifies the mode for
+ * each pin; a set bit indicates that an interrupt should be generated when
+ * the value of the pin differs from the corresponding value of the 'def'
+ * argument, a clear bit will cause an interrupt to be generated whenever
+ * a pin changes state.
+ */
+void mcp23s1x_set_interrupt(uint8_t addr, uint16_t pins, uint16_t mode,
+    uint16_t def);
+
+/*
+ * When interrupts are enabled, return the pins that have triggered them.
+ * This value is reset by mcp23s1x_get_pins() or mcp23s1x_get_interrupt_value().
+ */
+uint16_t mcp23s1x_get_interrupt_pins(uint8_t addr);
+
+/*
+ * Return the state of the input pins at the time of the last interupt.
+ * Reading this value clear the interrupt flag for that pin and resets this
+ * register.
+ */
+uint16_t mcp23s1x_get_interrupt_value(uint8_t addr);
 
 #endif /* MCP23S1X_H */
 

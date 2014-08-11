@@ -124,9 +124,10 @@ mcp23s1x_write16(uint8_t addr, uint8_t start_reg, uint16_t val)
 }
 
 void
-mcp23s1x_set_iodir(uint8_t addr, uint16_t iodir)
+mcp23s1x_set_iodir(uint8_t addr, uint16_t iodir, int flip_polarity)
 {
-	/* MCP23S1x IO direction register is opposite to AVR; 1 = output */
+	mcp23s1x_write16(addr, MCP23S1X_IPOLA, flip_polarity ? ~iodir : 0);
+	/* MCP23S1x IO direction register is opposite to AVR; 1 = input */
 	mcp23s1x_write16(addr, MCP23S1X_IODIRA, ~iodir);
 }
 
@@ -140,6 +141,26 @@ uint16_t
 mcp23s1x_get_pins(uint8_t addr)
 {
 	return mcp23s1x_read16(addr, MCP23S1X_GPIOA);
+}
+
+void
+mcp23s1x_set_interrupt(uint8_t addr, uint16_t pins, uint16_t mode, uint16_t def)
+{
+	mcp23s1x_write16(addr, MCP23S1X_DEFVALA, def & pins);
+	mcp23s1x_write16(addr, MCP23S1X_INTCONA, mode & pins);
+	mcp23s1x_write16(addr, MCP23S1X_GPINTENA, pins);
+}
+
+uint16_t
+mcp23s1x_get_interrupt_pins(uint8_t addr)
+{
+	return mcp23s1x_read16(addr, MCP23S1X_INTFA);
+}
+
+uint16_t
+mcp23s1x_get_interrupt_value(uint8_t addr)
+{
+	return mcp23s1x_read16(addr, MCP23S1X_INTCAPA);
 }
 
 void
