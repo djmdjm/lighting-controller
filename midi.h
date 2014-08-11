@@ -1,5 +1,5 @@
-#ifndef EVENT_TYPES_H
-#define EVENT_TYPES_H
+#ifndef MIDI_H
+#define MIDI_H
 
 /*
  * Copyright (c) 2013 Damien Miller <djm@mindrot.org>
@@ -17,22 +17,18 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-/* Registry of event types */
+/* MIDI parser bridged to event system */
 
-/* Rotary encoder */
-#define EV_ENCODER		0x00 /* v=1 clockwise, v=0 anti-clockwise */
-/* XXX support numbered encoders */
+/*
+ * Initialise the MIDI code; channel_mask is a bitmask representing which
+ * MIDI channels we are interested in. 0xffff = Omni.
+ */
+void midi_init(uint16_t channel_mask);
 
-/* MIDI events */
-#define EV_MIDI_NOTE_ON		0x10 /* chan, note, velocity */
-#define EV_MIDI_NOTE_OFF	0x11 /* chan, note, velocity */
-#define EV_MIDI_CLOCK		0x12 /* 0=start, 1=stop, 2=cont, 3=tick */
-#define EV_MIDI_RESET		0x13 /* empty */
-#define EV_MIDI_PITCH_BEND	0x14 /* chan, MSB, LSB */
-#define EV_MIDI_ATOUCH_CHAN	0x15 /* chan, value */
-#define EV_MIDI_ALL_OFF		0x16 /* chan */
-#define EV_MIDI_CONTROL_RESET	0x17 /* chan */
-#define EV_MIDI_CONTROLLER	0x18 /* chan, controller number, MSB */
+/*
+ * Parse a received MIDI bytes. Will emit events (cf. event.h/event-type.h)
+ * in response to completed messages.
+ */
+void midi_in(uint8_t r);
 
-#endif /* EVENT_TYPES_H */
-
+#endif /* MIDI_H */
