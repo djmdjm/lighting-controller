@@ -32,11 +32,12 @@
 #include "event.h"
 #include "mcp23s1x.h"
 
-ISR(ENC_VECT)
+ISR(PCINT0_vect)
 {
 	encoder_interrupt();
 }
 
+/* Maps from MCP23S17 pins to LED/Pot pairs */
 struct channel_map {
 	int addr;
 	int pin;
@@ -63,22 +64,22 @@ main(void)
 	char buf[3];
 
 	CLKPR = 0x80;
-	CLKPR = 0x03; /* 2 MHz */
-//#define lcd_setup()
-//#define lcd_moveto(a,b)
-//#define lcd_string(a)
+	CLKPR = 0x00; /* 16 MHz */
+	/* CLKPR = 0x03; *//* 2 MHz */
 	lcd_setup();
 	spi_setup();
 	mcp23s1x_setup();
+	encoder_setup();
 	sei();
 
-	mcp23s1x_set_iodir(0x4, 0xffff);
-	mcp23s1x_set_iodir(0x5, 0xffff);
-	mcp23s1x_set_iodir(0x6, 0x00ff);
+	mcp23s1x_set_iodir(0x4, 0xffff, 0);
+	mcp23s1x_set_iodir(0x5, 0xffff, 0);
+	mcp23s1x_set_iodir(0x6, 0x00ff, 1);
 
-///* XXX */ DDRD |= 1<<6;
+	/* On-board LED */
+	DDRD |= 1<<6;
 	for (i = a = b = c = 0; ; i++) {
-///* XXX */	PORTD = PORTD ^ (1<<6);
+		PORTD = PORTD ^ (1<<6);
 		v4  = (channel_a[a].addr == 0x4) ? (1 << channel_a[a].pin) : 0;
 		v4 |= (channel_b[b].addr == 0x4) ? (1 << channel_b[b].pin) : 0;
 		v4 |= (channel_c[c].addr == 0x4) ? (1 << channel_c[c].pin) : 0;
@@ -89,18 +90,19 @@ main(void)
 
 		mcp23s1x_set_gpio(0x4, v4);
 		mcp23s1x_set_gpio(0x5, v5);
-		//mcp23s1x_set_gpio(0x6, 1 << (i % 5));
+
 		p = mcp23s1x_get_pins(0x6);
 		mcp23s1x_set_gpio(0x6, 
-			!(p & (1 << 15)) << 0 |
-			!(p & (1 << 14)) << 1 |
-			!(p & (1 << 13)) << 2 |
-			!(p & (1 << 12)) << 3 |
-			!(p & (1 << 11)) << 4 |
-			((p & (1 << 10)) ? 0x0 : 0xff));
+			((p & (1 << 15)) ? (1 << 0) : 0) |
+			((p & (1 << 14)) ? (1 << 1) : 0) |
+			((p & (1 << 13)) ? (1 << 2) : 0) |
+			((p & (1 << 12)) ? (1 << 3) : 0) |
+			((p & (1 << 11)) ? (1 << 4) : 0) |
+			((p & (1 << 10)) ? 0x1f : 0x00));
 
 		lcd_moveto(0, 0);
-		lcd_string("Analogue Sequence Test");
+		lcd_string("Sequence Test");
+		lcd_string(rjustify(ntod(encoder_value()), buf, 6));
 		lcd_moveto(0, 1);
 		lcd_string("a = ");
 		lcd_string(rjustify(ntod(a), buf, 3));

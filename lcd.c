@@ -21,6 +21,7 @@
 #include <stddef.h>
 #include <avr/io.h>
 #include <util/delay.h>
+#include <util/delay_basic.h>
 
 #include "lcd.h"
 
@@ -189,7 +190,7 @@ static uint8_t
 lcd_waitbusy(void)
 {
 	while ((lcd_read8(0) & LCD_R_BUSY) != 0)
-		_delay_us(1);
+		;
 	
 	_delay_us(1);
 	return lcd_read8(0) & LCD_R_ADDR_MASK;

@@ -25,11 +25,11 @@
 #define ENC_VECT		PCINT0_vect
 #define ENC_PCIE		PCIE0
 #define ENC_PCMSK		PCMSK0
-#define ENC_PIN_A		6
-#define ENC_PIN_B		5
-#define ENC_INT_A		PCINT6
+#define ENC_PIN_A		5
+#define ENC_PIN_B		4
+#define ENC_INT_A		PCINT4
 #define ENC_INT_B		PCINT5
-#define ENC_PULSE_PER_DETENT	4
+#define ENC_PULSE_PER_DETENT	2
 
 /*
  * Define ENC_INTERRUPT_HANDLER if you want this module to set up the
