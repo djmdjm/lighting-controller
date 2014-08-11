@@ -21,12 +21,6 @@
 
 /* Simple event queue */
 
-#define EVENT_QUEUE_LEN	256
-struct event {
-	uint8_t type;
-	uint16_t v;
-};
-
 /* Initialise the event queue */
 void event_setup(void);
 
@@ -35,13 +29,14 @@ void event_setup(void);
  * entries on the queue rather than overflowing. Returns 1 if the event
  * was successfully enqueued or 0 if an overflow prevented the queueing.
  */
-int event_enqueue(uint8_t type, uint16_t value, int important);
+int event_enqueue(uint8_t type, uint8_t v1, uint8_t v2, uint8_t v3,
+    int important);
 
 /*
  * Poll to dequeue an event. Returns 1 if an event was dequeued or zero
  * if none were pending.
  */
-int event_dequeue(uint8_t *type, uint16_t *value);
+int event_dequeue(uint8_t *type, uint8_t *v1, uint8_t *v2, uint8_t *v3);
 
 /*
  * Return the number of pending events on the queue. Beware TOCOTU if the

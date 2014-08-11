@@ -55,12 +55,12 @@ encoder_interrupt(void)
 	if (pulses >= ENC_PULSE_PER_DETENT) {
 		if (enc_value < INT16_MAX)
 			enc_value++;
-		event_enqueue(EV_ENCODER, 1, 0);
+		event_enqueue(EV_ENCODER, 1, 0, 0, 0);
 		pulses = 0;
 	} else if (pulses <= -ENC_PULSE_PER_DETENT) {
 		if (enc_value > INT16_MIN)
 			enc_value--;
-		event_enqueue(EV_ENCODER, 0, 0);
+		event_enqueue(EV_ENCODER, 0, 0, 0, 0);
 		pulses = 0;
 	}
 }

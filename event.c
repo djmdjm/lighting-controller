@@ -21,7 +21,6 @@
 
 #ifdef EVENT_LOCAL_DEBUG
 # define ATOMIC_BLOCK(x) if (1)
-# include <err.h>
 #else
 # include <util/atomic.h>
 #endif
@@ -30,6 +29,12 @@
 #include <string.h>
 
 #include "event.h"
+
+#define EVENT_QUEUE_LEN	64
+struct event {
+	uint8_t type;
+	uint8_t v[3];
+};
 
 /* Ring buffer */
 static struct event events[EVENT_QUEUE_LEN];
@@ -44,7 +49,7 @@ event_setup(void)
 }
 
 int
-event_enqueue(uint8_t type, uint16_t val, int important)
+event_enqueue(uint8_t type, uint8_t v1, uint8_t v2, uint8_t v3, int important)
 {
 	int r = 0;
 
@@ -56,7 +61,9 @@ event_enqueue(uint8_t type, uint16_t val, int important)
 		}
 		if (event_used < EVENT_QUEUE_LEN) {
 			events[event_ptr].type = type;
-			events[event_ptr].v = val;
+			events[event_ptr].v[0] = v1;
+			events[event_ptr].v[1] = v2;
+			events[event_ptr].v[2] = v3;
 			if (++event_ptr >= EVENT_QUEUE_LEN)
 				event_ptr = 0;
 			event_used++;
@@ -69,7 +76,7 @@ event_enqueue(uint8_t type, uint16_t val, int important)
 }
 
 int
-event_dequeue(uint8_t *type, uint16_t *value)
+event_dequeue(uint8_t *type, uint8_t *v1, uint8_t *v2, uint8_t *v3)
 {
 	int r = 0, o;
 
@@ -80,8 +87,12 @@ event_dequeue(uint8_t *type, uint16_t *value)
 				o -= EVENT_QUEUE_LEN;
 			if (type != NULL)
 				*type = events[o].type;
-			if (value != NULL)
-				*value = events[o].v;
+			if (v1 != NULL)
+				*v1 = events[o].v[0];
+			if (v2 != NULL)
+				*v2 = events[o].v[1];
+			if (v3 != NULL)
+				*v3 = events[o].v[2];
 			event_used--;
 			r = 1;
 		}
@@ -132,18 +143,18 @@ event_reset_overflowed(void)
 
 #if EVENT_LOCAL_DEBUG
 #include <err.h>
+#include <stdio.h>
 int
 main(void)
 {
 	int x;
-	uint8_t ev_type;
-	uint16_t ev_value;
+	uint8_t ev_type, ev_v1, ev_v2, ev_v3;
 
 	event_setup();
 	event_ptr = 3;
 
 	for (x = 0; x < EVENT_QUEUE_LEN; x++) {
-		if (event_enqueue(x, x << 1, 0) != 1)
+		if (event_enqueue(x, x, x % 3, x / 3, 0) != 1)
 			errx(1, "%d: enqueue %d",
 			    __LINE__, x);
 		if (event_nqueued() != x + 1)
@@ -152,7 +163,7 @@ main(void)
 		if (event_queue_overflowed())
 			errx(1, "%d: overflow %d", __LINE__, x);
 	}
-	if (event_enqueue(234, 5432, 0) != 0)
+	if (event_enqueue(234, 32, 56, 78, 0) != 0)
 		errx(1, "%d: full enqueue succeeded", __LINE__);
 	if (!event_queue_overflowed())
 		errx(1, "%d: !overflow", __LINE__);
@@ -160,29 +171,35 @@ main(void)
 	if (event_queue_overflowed())
 		errx(1, "%d: overflow %d", __LINE__, x);
 	for (x = 0; x < EVENT_QUEUE_LEN; x++) {
-		if (event_dequeue(&ev_type, &ev_value) != 1)
+		if (event_dequeue(&ev_type, &ev_v1, &ev_v2, &ev_v3) != 1)
 			errx(1, "%d: dequeue %d", __LINE__, x);
 		if (ev_type != x)
 			errx(1, "%d: type %d != expected %d",
 			    __LINE__, ev_type, x);
-		if (ev_value != x << 1)
-			errx(1, "%d: value %d != expected %d",
-			    __LINE__, ev_value, x);
+		if (ev_v1 != x)
+			errx(1, "%d: v1 %d != expected %d",
+			    __LINE__, ev_v1, x);
+		if (ev_v2 != x % 3)
+			errx(1, "%d: v2 %d != expected %d",
+			    __LINE__, ev_v2, x % 3);
+		if (ev_v3 != x / 3)
+			errx(1, "%d: v2 %d != expected %d",
+			    __LINE__, ev_v3, x / 3);
 		if (event_nqueued() != EVENT_QUEUE_LEN - x - 1)
 			errx(1, "%d: nqueued %d expected %d",
 			    __LINE__, event_nqueued(),
 			    x + 1);
 	}
-	if (event_dequeue(&ev_type, &ev_value) != 0)
+	if (event_dequeue(&ev_type, &ev_v1, &ev_v2, &ev_v3) != 0)
 		errx(1, "%d: dequeue empty", __LINE__);
 	for (x = 0; x < EVENT_QUEUE_LEN; x++) {
-		if (event_enqueue(x, x << 1, 0) != 1)
+		if (event_enqueue(x, x, x % 5, x / 5, 0) != 1)
 			errx(1, "%d: enqueue %d", __LINE__, x);
 	}
 	if (event_nqueued() != EVENT_QUEUE_LEN)
 		errx(1, "%d: nqueued %d expected %d",
 		    __LINE__, event_nqueued(), EVENT_QUEUE_LEN);
-	if (event_enqueue(123, 4567, 1) != 1)
+	if (event_enqueue(123, 210, 45, 67, 1) != 1)
 		errx(1, "%d: enqueue important failed", __LINE__);
 	if (!event_queue_overflowed())
 		errx(1, "%d: !overflow", __LINE__);
@@ -190,28 +207,38 @@ main(void)
 		errx(1, "%d: nqueued %d expected %d",
 		    __LINE__, event_nqueued(), EVENT_QUEUE_LEN);
 	for (x = 1; x < EVENT_QUEUE_LEN; x++) {
-		if (event_dequeue(&ev_type, &ev_value) != 1)
+		if (event_dequeue(&ev_type, &ev_v1, &ev_v2, &ev_v3) != 1)
 			errx(1, "%d: dequeue %d", __LINE__, x);
 		if (ev_type != x)
 			errx(1, "%d: type %d != expected %d",
 			    __LINE__, ev_type, x);
-		if (ev_value != x << 1)
-			errx(1, "%d: value %d != expected %d",
-			    __LINE__, ev_value, x);
+		if (ev_v1 != x)
+			errx(1, "%d: v1 %d != expected %d",
+			    __LINE__, ev_v1, x);
+		if (ev_v2 != x % 5)
+			errx(1, "%d: v2 %d != expected %d",
+			    __LINE__, ev_v2, x << 1);
+		if (ev_v3 != x / 5)
+			errx(1, "%d: v3 %d != expected %d",
+			    __LINE__, ev_v3, x << 1);
 		if (event_nqueued() != EVENT_QUEUE_LEN - x)
 			errx(1, "%d: nqueued %d expected %d",
 			    __LINE__, event_nqueued(), x);
 	}
-	if (event_dequeue(&ev_type, &ev_value) != 1)
+	if (event_dequeue(&ev_type, &ev_v1, &ev_v2, &ev_v3) != 1)
 		errx(1, "%d: dequeue %d", __LINE__, x);
 	if (ev_type != 123)
 		errx(1, "%d: type %d != expected %d", __LINE__, ev_type, 123);
-	if (ev_value != 4567)
-		errx(1, "%d: value %d != expected %d",
-		    __LINE__, ev_value, 4567);
+	if (ev_v1 != 210)
+		errx(1, "%d: v1 %d != expected %d", __LINE__, ev_v1, 210);
+	if (ev_v2 != 45)
+		errx(1, "%d: v2 %d != expected %d", __LINE__, ev_v2, 4567);
+	if (ev_v3 != 67)
+		errx(1, "%d: v3 %d != expected %d", __LINE__, ev_v3, 67);
 	if (event_nqueued() != 0)
 		errx(1, "%d: nqueued %d expected %d",
 		    __LINE__, event_nqueued(), 0);
+	printf("OK\n");
 	return 0;
 }
 #endif
