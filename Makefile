@@ -1,5 +1,6 @@
-#MCU=at90usb1286
-MCU=atmega32u4
+MCU=at90usb1286
+#MCU=atmega32u4
+#CPUFREQ=8000000
 CPUFREQ=16000000
 LOADER=teensy
 
@@ -17,8 +18,8 @@ WARNFLAGS+=-Werror -Wno-type-limits -Wno-unused
 CFLAGS=-mmcu=${MCU} -DF_CPU=${CPUFREQ}UL ${WARNFLAGS} ${OPT} -std=gnu99
 CFLAGS+=-funsigned-char -funsigned-bitfields -fpack-struct -fshort-enums
 
-LIBAVR_OBJS=demux.o rgbled.o num_format.o spi.o ad56x8.o encoder.o event.o lcd.o 
-LIBAVR_OBJS+=mcp23s1x.o
+LIBAVR_OBJS=demux.o rgbled.o num_format.o spi.o ad56x8.o encoder.o event.o
+LIBAVR_OBJS+=mcp23s1x.o midi.o lcd.o
 
 CC=avr-gcc
 OBJCOPY=avr-objcopy
@@ -34,7 +35,7 @@ sequencer.hex: sequencer.elf
 load: ${LOADER}
 
 teensy: sequencer.hex
-	${SUDO} teensy_loader_cli -w -mmcu=${MCU} sequencer.hex
+	${SUDO} teensy_loader_cli -v -w -mmcu=${MCU} sequencer.hex
 
 avrdude: sequencer.hex
 	avrdude -P ${AVRDUDE_PORT} -p ${AVRDUDE_PART} -c ${AVRDUDE_HW} \

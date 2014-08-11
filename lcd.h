@@ -28,20 +28,20 @@
  */
 #define LCD_CTL_DDR	DDRF
 #define LCD_CTL_PORT	PORTF
-#define LCD_CTL_RS	6
-#define LCD_CTL_RW	7
+#define LCD_CTL_RS	0
+#define LCD_CTL_RW	1
 
-#define LCD_EN_DDR	DDRD
-#define LCD_EN_PORT	PORTD
-#define LCD_EN		7
+#define LCD_EN_DDR	DDRF
+#define LCD_EN_PORT	PORTF
+#define LCD_EN		2
 
 #define LCD_DB_DDR	DDRF
 #define LCD_DB_PORT	PORTF
 #define LCD_DB_PIN	PINF
-#define LCD_DB_4	0
-#define LCD_DB_5	1
-#define LCD_DB_6	4
-#define LCD_DB_7	5
+#define LCD_DB_4	4
+#define LCD_DB_5	5
+#define LCD_DB_6	6
+#define LCD_DB_7	7
 
 /* LCD special characters */
 #define LCD_CHAR_ARROW_R	0x7e

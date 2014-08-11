@@ -14,13 +14,12 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-/* Lamp/LCD test application */
-
 #include <avr/io.h>
 #include <avr/interrupt.h>
 #include <util/delay.h>
 #include <stddef.h>
 #include <stdint.h>
+#include <string.h>
 
 #include "rgbled.h"
 #include "demux.h"
@@ -31,92 +30,62 @@
 #include "encoder.h"
 #include "event.h"
 #include "mcp23s1x.h"
-
-ISR(PCINT0_vect)
-{
-	encoder_interrupt();
-}
-
-/* Maps from MCP23S17 pins to LED/Pot pairs */
-struct channel_map {
-	int addr;
-	int pin;
-};
-struct channel_map channel_a[16] = {
-	{ 0x4, 0 }, { 0x4, 4 }, { 0x4, 11 }, { 0x4, 15 },
-	{ 0x5, 4 }, { 0x5, 0 }, { 0x5, 15 }, { 0x5, 11 },
-	{ 0x4, 1 }, { 0x4, 5 }, { 0x4, 10 }, { 0x4, 14 },
-	{ 0x5, 5 }, { 0x5, 1 }, { 0x5, 14 }, { 0x5, 10 },
-};
-struct channel_map channel_b[8] = {
-	{ 0x4, 2 }, { 0x4, 6 }, { 0x4, 9 }, { 0x4, 13 },
-	{ 0x5, 6 }, { 0x5, 2 }, { 0x5, 13 }, { 0x5, 9 },
-};
-struct channel_map channel_c[8] = {
-	{ 0x4, 3 }, { 0x4, 7 }, { 0x4, 8 }, { 0x4, 12 },
-	{ 0x5, 7 }, { 0x5, 3 }, { 0x5, 12 }, { 0x5, 8 },
-};
+#include "midi.h"
 
 int
 main(void)
 {
-	uint16_t i, a, b, c, v4, v5, p;
-	char buf[3];
+	uint8_t rx, ev_type, ev_v1, ev_v2, ev_v3;
 
 	CLKPR = 0x80;
 	CLKPR = 0x00; /* 16 MHz */
 	/* CLKPR = 0x03; *//* 2 MHz */
+
+	event_setup();
 	lcd_setup();
+	//lcd_display(1, 1, 1);
+	midi_init(0xffff); /* XXX poly */
 	spi_setup();
-	mcp23s1x_setup();
-	encoder_setup();
-	sei();
+	ad56x8_setup(1);
 
-	mcp23s1x_set_iodir(0x4, 0xffff, 0);
-	mcp23s1x_set_iodir(0x5, 0xffff, 0);
-	mcp23s1x_set_iodir(0x6, 0x00ff, 1);
+	DDRC = 0xff; /* XXX gate output */
 
-	/* On-board LED */
+	/* Prepare serial */
+	DDRD |= 1<<3;
+	DDRD &= ~(1<<2);
+	PORTD |= 1<<2 | 1<<3;
+
+	UCSR1A=0;
+	UCSR1B=(1<<RXEN1)|(1<<TXEN1); // Both receiver and transmitter enable
+	UCSR1C=3<<UCSZ10; // 8 data bit, a stop, none parity
+	UBRR1H = 0;
+	/* UBRR1L = 103; */ /* for 9600 baud testing */
+	UBRR1L = 31; /* MIDI 31250 baud */
+
+	lcd_moveto(0, 0);
+	lcd_string("OK ");
+
 	DDRD |= 1<<6;
-	for (i = a = b = c = 0; ; i++) {
-		PORTD = PORTD ^ (1<<6);
-		v4  = (channel_a[a].addr == 0x4) ? (1 << channel_a[a].pin) : 0;
-		v4 |= (channel_b[b].addr == 0x4) ? (1 << channel_b[b].pin) : 0;
-		v4 |= (channel_c[c].addr == 0x4) ? (1 << channel_c[c].pin) : 0;
-
-		v5  = (channel_a[a].addr == 0x5) ? (1 << channel_a[a].pin) : 0;
-		v5 |= (channel_b[b].addr == 0x5) ? (1 << channel_b[b].pin) : 0;
-		v5 |= (channel_c[c].addr == 0x5) ? (1 << channel_c[c].pin) : 0;
-
-		mcp23s1x_set_gpio(0x4, v4);
-		mcp23s1x_set_gpio(0x5, v5);
-
-		p = mcp23s1x_get_pins(0x6);
-		mcp23s1x_set_gpio(0x6, 
-			((p & (1 << 15)) ? (1 << 0) : 0) |
-			((p & (1 << 14)) ? (1 << 1) : 0) |
-			((p & (1 << 13)) ? (1 << 2) : 0) |
-			((p & (1 << 12)) ? (1 << 3) : 0) |
-			((p & (1 << 11)) ? (1 << 4) : 0) |
-			((p & (1 << 10)) ? 0x1f : 0x00));
-
-		lcd_moveto(0, 0);
-		lcd_string("Sequence Test");
-		lcd_string(rjustify(ntod(encoder_value()), buf, 6));
-		lcd_moveto(0, 1);
-		lcd_string("a = ");
-		lcd_string(rjustify(ntod(a), buf, 3));
-		lcd_string(" b = ");
-		lcd_string(rjustify(ntod(b), buf, 3));
-		lcd_string(" c = ");
-		lcd_string(rjustify(ntod(c), buf, 3));
-
-		_delay_ms(107);
-
-		a = (a + 1) & 0xf;
-		if ((i % 2) == 0)
-			b = (b + 1) & 0x7;
-		if ((i % 4) == 0)
-			c = (c + 1) & 0x7;
+	while (1) {
+		if ((UCSR1A & (1<<RXC1)) != 0) {
+			rx = UDR1;
+			if (rx != 0xfe)
+				PORTD ^= 1<<6; /* blink on rx */
+			midi_in(rx);
+		}
+		if (event_dequeue(&ev_type, &ev_v1, &ev_v2, &ev_v3)) {
+#if 2
+			//lcd_clear();
+			lcd_moveto(0, 0);
+			lcd_string(ntoh(ev_type, 0));
+			lcd_string(" ");
+			lcd_string(ntoh(ev_v1, 0));
+			lcd_string(" ");
+			lcd_string(ntoh(ev_v2, 0));
+			lcd_string(" ");
+			lcd_string(ntoh(ev_v3, 0));
+			lcd_string(" ");
+#endif
+		}
 	}
 }

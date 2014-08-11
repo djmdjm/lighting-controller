@@ -19,9 +19,9 @@
 
 /* Convenience routines for hardware AD56x8 */
 
-#define AD56X8_PORT	PORTE
-#define AD56X8_DDR	DDRE
-#define AD56X8_SS	7
+#define AD56X8_PORT	PORTB
+#define AD56X8_DDR	DDRB
+#define AD56X8_SS	0
 
 /* Set up ADC, optionally enabling internal voltage reference */
 void ad56x8_setup(int vref_on);
