@@ -61,8 +61,11 @@ ad56x8_setup(int vref_on)
 void
 ad56x8_write_update(int channel, uint16_t val)
 {
-	if (channel == -1)
+	if (channel < 0)
 		channel = 15;
-	ad56x8_command(0x03, (channel & 0xf) << 4,
-	    (val >> 8) & 0xff, val & 0xff);
+	else if (channel > 7)
+		return;
+	ad56x8_command(0x03, (channel << 4) | ((val >> 12) & 0xf),
+	    (val >> 4) & 0xff,
+	    (val & 0xf) << 4);
 }
