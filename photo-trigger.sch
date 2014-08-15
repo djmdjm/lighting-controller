@@ -512,6 +512,11 @@ at 27/07/2012 14:02:49</description>
 <text x="-1.27" y="-6.35" size="1.27" layer="25">&gt;NAME</text>
 <text x="-5.08" y="5.08" size="1.27" layer="27">&gt;VALUE</text>
 </package>
+<package name="PAD1.9/0.9">
+<pad name="P$1" x="0" y="0" drill="0.9" diameter="1.9304"/>
+<text x="-1.27" y="1.27" size="1.27" layer="25">&gt;NAME</text>
+<text x="-1.27" y="-2.54" size="1.27" layer="27">&gt;VALUE</text>
+</package>
 </packages>
 <symbols>
 <symbol name="OPTO-NPN">
@@ -602,6 +607,12 @@ at 27/07/2012 14:02:49</description>
 <pin name="E" x="0" y="5.08" visible="off" length="short" direction="pas" rot="R270"/>
 <pin name="S" x="5.08" y="0" visible="off" length="short" direction="pas" rot="R180"/>
 </symbol>
+<symbol name="PAD">
+<wire x1="-1.016" y1="1.016" x2="1.016" y2="-1.016" width="0.254" layer="94"/>
+<wire x1="-1.016" y1="-1.016" x2="1.016" y2="1.016" width="0.254" layer="94"/>
+<text x="-1.143" y="1.8542" size="1.778" layer="95">&gt;NAME</text>
+<pin name="P" x="2.54" y="0" visible="off" length="short" direction="pas" rot="R180"/>
+</symbol>
 </symbols>
 <devicesets>
 <deviceset name="2N25" prefix="OC">
@@ -680,6 +691,21 @@ at 27/07/2012 14:02:49</description>
 <connect gate="G$1" pin="A" pad="P$1"/>
 <connect gate="G$1" pin="E" pad="P$3"/>
 <connect gate="G$1" pin="S" pad="P$2"/>
+</connects>
+<technologies>
+<technology name=""/>
+</technologies>
+</device>
+</devices>
+</deviceset>
+<deviceset name="PAD1.9/0.9">
+<gates>
+<gate name="G$1" symbol="PAD" x="0" y="0"/>
+</gates>
+<devices>
+<device name="" package="PAD1.9/0.9">
+<connects>
+<connect gate="G$1" pin="P" pad="P$1"/>
 </connects>
 <technologies>
 <technology name=""/>
@@ -5203,54 +5229,6 @@ Source: www.kingbright.com</description>
 <connects>
 <connect gate="G$1" pin="A" pad="A"/>
 <connect gate="G$1" pin="C" pad="C"/>
-</connects>
-<technologies>
-<technology name=""/>
-</technologies>
-</device>
-</devices>
-</deviceset>
-</devicesets>
-</library>
-<library name="wirepad">
-<description>&lt;b&gt;Single Pads&lt;/b&gt;&lt;p&gt;
-&lt;author&gt;Created by librarian@cadsoft.de&lt;/author&gt;</description>
-<packages>
-<package name="1,6/0,9">
-<description>&lt;b&gt;THROUGH-HOLE PAD&lt;/b&gt;</description>
-<wire x1="-0.508" y1="0.762" x2="-0.762" y2="0.762" width="0.1524" layer="21"/>
-<wire x1="-0.762" y1="0.762" x2="-0.762" y2="0.508" width="0.1524" layer="21"/>
-<wire x1="-0.762" y1="-0.508" x2="-0.762" y2="-0.762" width="0.1524" layer="21"/>
-<wire x1="-0.762" y1="-0.762" x2="-0.508" y2="-0.762" width="0.1524" layer="21"/>
-<wire x1="0.508" y1="-0.762" x2="0.762" y2="-0.762" width="0.1524" layer="21"/>
-<wire x1="0.762" y1="-0.762" x2="0.762" y2="-0.508" width="0.1524" layer="21"/>
-<wire x1="0.762" y1="0.508" x2="0.762" y2="0.762" width="0.1524" layer="21"/>
-<wire x1="0.762" y1="0.762" x2="0.508" y2="0.762" width="0.1524" layer="21"/>
-<circle x="0" y="0" radius="0.635" width="0.1524" layer="51"/>
-<pad name="1" x="0" y="0" drill="0.9144" diameter="1.6002" shape="octagon"/>
-<text x="-0.762" y="1.016" size="1.27" layer="25" ratio="10">&gt;NAME</text>
-<text x="0" y="0.6" size="0.0254" layer="27">&gt;VALUE</text>
-</package>
-</packages>
-<symbols>
-<symbol name="PAD">
-<wire x1="-1.016" y1="1.016" x2="1.016" y2="-1.016" width="0.254" layer="94"/>
-<wire x1="-1.016" y1="-1.016" x2="1.016" y2="1.016" width="0.254" layer="94"/>
-<text x="-1.143" y="1.8542" size="1.778" layer="95">&gt;NAME</text>
-<text x="-1.143" y="-3.302" size="1.778" layer="96">&gt;VALUE</text>
-<pin name="P" x="2.54" y="0" visible="off" length="short" direction="pas" rot="R180"/>
-</symbol>
-</symbols>
-<devicesets>
-<deviceset name="1,6/0,9" prefix="PAD" uservalue="yes">
-<description>&lt;b&gt;THROUGH-HOLE PAD&lt;/b&gt;</description>
-<gates>
-<gate name="1" symbol="PAD" x="0" y="0"/>
-</gates>
-<devices>
-<device name="" package="1,6/0,9">
-<connects>
-<connect gate="1" pin="P" pad="1"/>
 </connects>
 <technologies>
 <technology name=""/>
@@ -13436,18 +13414,18 @@ DIN A4, landscape with extra doc field</description>
 <part name="JP1" library="pinhead" deviceset="PINHD-1X2" device="" value="BATTERY"/>
 <part name="P+7" library="supply1" deviceset="VCC" device=""/>
 <part name="GND11" library="supply1" deviceset="GND" device=""/>
-<part name="VCC" library="wirepad" deviceset="1,6/0,9" device="" value="VCC"/>
-<part name="PA6" library="wirepad" deviceset="1,6/0,9" device="" value="PA2"/>
-<part name="PA7" library="wirepad" deviceset="1,6/0,9" device="" value="PA3"/>
-<part name="PC0" library="wirepad" deviceset="1,6/0,9" device="" value="PC0"/>
-<part name="PC1" library="wirepad" deviceset="1,6/0,9" device="" value="PC1"/>
-<part name="PC2" library="wirepad" deviceset="1,6/0,9" device="" value="PC2"/>
-<part name="PC3" library="wirepad" deviceset="1,6/0,9" device="" value="PC3"/>
-<part name="PC4" library="wirepad" deviceset="1,6/0,9" device="" value="PC4"/>
-<part name="PC5" library="wirepad" deviceset="1,6/0,9" device="" value="PC5"/>
-<part name="PC6" library="wirepad" deviceset="1,6/0,9" device="" value="PC6"/>
-<part name="PC7" library="wirepad" deviceset="1,6/0,9" device="" value="PC7"/>
-<part name="GND" library="wirepad" deviceset="1,6/0,9" device="" value="GND"/>
+<part name="VCC" library="djm" deviceset="PAD1.9/0.9" device="" value="VCC"/>
+<part name="PA6" library="djm" deviceset="PAD1.9/0.9" device="" value="PA2"/>
+<part name="PA7" library="djm" deviceset="PAD1.9/0.9" device="" value="PA3"/>
+<part name="PC0" library="djm" deviceset="PAD1.9/0.9" device="" value="PC0"/>
+<part name="PC1" library="djm" deviceset="PAD1.9/0.9" device="" value="PC1"/>
+<part name="PC2" library="djm" deviceset="PAD1.9/0.9" device="" value="PC2"/>
+<part name="PC3" library="djm" deviceset="PAD1.9/0.9" device="" value="PC3"/>
+<part name="PC4" library="djm" deviceset="PAD1.9/0.9" device="" value="PC4"/>
+<part name="PC5" library="djm" deviceset="PAD1.9/0.9" device="" value="PC5"/>
+<part name="PC6" library="djm" deviceset="PAD1.9/0.9" device="" value="PC6"/>
+<part name="PC7" library="djm" deviceset="PAD1.9/0.9" device="" value="PC7"/>
+<part name="GND" library="djm" deviceset="PAD1.9/0.9" device="" value="GND"/>
 <part name="VDD2" library="supply1" deviceset="VDD" device=""/>
 <part name="GNDI2" library="supply1" deviceset="GNDI" device=""/>
 <part name="GND13" library="supply1" deviceset="GND" device=""/>
@@ -13466,15 +13444,15 @@ DIN A4, landscape with extra doc field</description>
 <part name="JP7" library="pinhead" deviceset="PINHD-1X5" device="" value="OUT4"/>
 <part name="JP8" library="pinhead" deviceset="PINHD-2X12" device="" value="PANEL"/>
 <part name="GNDI6" library="supply1" deviceset="GNDI" device=""/>
-<part name="GNDO" library="wirepad" deviceset="1,6/0,9" device="" value="GNDO"/>
-<part name="VCCP2" library="wirepad" deviceset="1,6/0,9" device="" value="VCC"/>
-<part name="GNDP2" library="wirepad" deviceset="1,6/0,9" device="" value="GND"/>
+<part name="GNDO" library="djm" deviceset="PAD1.9/0.9" device="" value="GNDO"/>
+<part name="VCCP2" library="djm" deviceset="PAD1.9/0.9" device="" value="VCC"/>
+<part name="GNDP2" library="djm" deviceset="PAD1.9/0.9" device="" value="GND"/>
 <part name="P+12" library="supply1" deviceset="+5V" device=""/>
 <part name="GND20" library="supply1" deviceset="GNDIO" device=""/>
-<part name="GNDI" library="wirepad" deviceset="1,6/0,9" device="" value="GNDI"/>
-<part name="+5VI" library="wirepad" deviceset="1,6/0,9" device="" value="+5VI"/>
+<part name="GNDI" library="djm" deviceset="PAD1.9/0.9" device="" value="GNDI"/>
+<part name="+5VI" library="djm" deviceset="PAD1.9/0.9" device="" value="+5VI"/>
 <part name="VDD6" library="supply1" deviceset="VDD" device=""/>
-<part name="+5VO" library="wirepad" deviceset="1,6/0,9" device="" value="+5VO"/>
+<part name="+5VO" library="djm" deviceset="PAD1.9/0.9" device="" value="+5VO"/>
 <part name="C8" library="rcl" deviceset="C-EU" device="050-035X075" value="0.1uF"/>
 <part name="R1" library="rcl" deviceset="R-EU_" device="0207/10" value="100"/>
 <part name="C9" library="rcl" deviceset="C-EU" device="050-035X075" value="10uF"/>
@@ -13483,7 +13461,7 @@ DIN A4, landscape with extra doc field</description>
 <part name="GND22" library="supply1" deviceset="GND" device=""/>
 <part name="P+14" library="supply1" deviceset="VCC" device=""/>
 <part name="GND23" library="supply1" deviceset="GND" device=""/>
-<part name="LCD" library="pinhead" deviceset="PINHD-2X8" device=""/>
+<part name="LP3" library="pinhead" deviceset="PINHD-2X8" device="" value="LCD"/>
 <part name="R2" library="rcl" deviceset="R-EU_" device="0207/10" value="100K"/>
 </parts>
 <sheets>
@@ -14164,18 +14142,18 @@ DIN A4, landscape with extra doc field</description>
 <instance part="FRAME4" gate="G$2" x="162.56" y="0"/>
 <instance part="P+7" gate="VCC" x="38.1" y="55.88"/>
 <instance part="GND11" gate="1" x="38.1" y="17.78"/>
-<instance part="VCC" gate="1" x="63.5" y="50.8" rot="R180"/>
-<instance part="PA6" gate="1" x="68.58" y="48.26" rot="R180"/>
-<instance part="PA7" gate="1" x="73.66" y="45.72" rot="R180"/>
-<instance part="PC0" gate="1" x="78.74" y="43.18" rot="R180"/>
-<instance part="PC1" gate="1" x="63.5" y="40.64" rot="R180"/>
-<instance part="PC2" gate="1" x="68.58" y="38.1" rot="R180"/>
-<instance part="PC3" gate="1" x="73.66" y="35.56" rot="R180"/>
-<instance part="PC4" gate="1" x="63.5" y="33.02" rot="R180"/>
-<instance part="PC5" gate="1" x="68.58" y="30.48" rot="R180"/>
-<instance part="PC6" gate="1" x="73.66" y="27.94" rot="R180"/>
-<instance part="PC7" gate="1" x="78.74" y="25.4" rot="R180"/>
-<instance part="GND" gate="1" x="63.5" y="22.86" rot="R180"/>
+<instance part="VCC" gate="G$1" x="63.5" y="50.8" rot="R180"/>
+<instance part="PA6" gate="G$1" x="68.58" y="48.26" rot="R180"/>
+<instance part="PA7" gate="G$1" x="73.66" y="45.72" rot="R180"/>
+<instance part="PC0" gate="G$1" x="78.74" y="43.18" rot="R180"/>
+<instance part="PC1" gate="G$1" x="63.5" y="40.64" rot="R180"/>
+<instance part="PC2" gate="G$1" x="68.58" y="38.1" rot="R180"/>
+<instance part="PC3" gate="G$1" x="73.66" y="35.56" rot="R180"/>
+<instance part="PC4" gate="G$1" x="63.5" y="33.02" rot="R180"/>
+<instance part="PC5" gate="G$1" x="68.58" y="30.48" rot="R180"/>
+<instance part="PC6" gate="G$1" x="73.66" y="27.94" rot="R180"/>
+<instance part="PC7" gate="G$1" x="78.74" y="25.4" rot="R180"/>
+<instance part="GND" gate="G$1" x="63.5" y="22.86" rot="R180"/>
 <instance part="VDD2" gate="G$1" x="53.34" y="139.7"/>
 <instance part="GNDI2" gate="G$1" x="68.58" y="132.08"/>
 <instance part="GND13" gate="1" x="73.66" y="137.16"/>
@@ -14194,19 +14172,19 @@ DIN A4, landscape with extra doc field</description>
 <instance part="JP7" gate="A" x="154.94" y="139.7"/>
 <instance part="JP8" gate="A" x="182.88" y="83.82"/>
 <instance part="GNDI6" gate="G$1" x="137.16" y="17.78"/>
-<instance part="GNDO" gate="1" x="147.32" y="22.86" rot="R180"/>
-<instance part="VCCP2" gate="1" x="88.9" y="50.8" rot="R180"/>
-<instance part="GNDP2" gate="1" x="88.9" y="22.86" rot="R180"/>
+<instance part="GNDO" gate="G$1" x="147.32" y="22.86" rot="R180"/>
+<instance part="VCCP2" gate="G$1" x="88.9" y="50.8" rot="R180"/>
+<instance part="GNDP2" gate="G$1" x="88.9" y="22.86" rot="R180"/>
 <instance part="P+12" gate="1" x="109.22" y="38.1"/>
 <instance part="GND20" gate="G$1" x="109.22" y="17.78" rot="MR0"/>
-<instance part="GNDI" gate="1" x="119.38" y="22.86" rot="R180"/>
-<instance part="+5VI" gate="1" x="119.38" y="30.48" rot="R180"/>
+<instance part="GNDI" gate="G$1" x="119.38" y="22.86" rot="R180"/>
+<instance part="+5VI" gate="G$1" x="119.38" y="30.48" rot="R180"/>
 <instance part="VDD6" gate="G$1" x="137.16" y="38.1"/>
-<instance part="+5VO" gate="1" x="147.32" y="30.48" rot="R180"/>
+<instance part="+5VO" gate="G$1" x="147.32" y="30.48" rot="R180"/>
 <instance part="GND22" gate="1" x="210.82" y="86.36" rot="MR0"/>
 <instance part="P+14" gate="VCC" x="142.24" y="99.06"/>
 <instance part="GND23" gate="1" x="142.24" y="68.58"/>
-<instance part="LCD" gate="A" x="129.54" y="83.82"/>
+<instance part="LP3" gate="A" x="129.54" y="83.82"/>
 <instance part="R2" gate="G$1" x="157.48" y="76.2" rot="R270"/>
 </instances>
 <busses>
@@ -14256,12 +14234,12 @@ DIN A4, landscape with extra doc field</description>
 <pinref part="GND11" gate="1" pin="GND"/>
 <wire x1="55.88" y1="22.86" x2="60.96" y2="22.86" width="0.1524" layer="91"/>
 <wire x1="38.1" y1="22.86" x2="38.1" y2="20.32" width="0.1524" layer="91"/>
-<pinref part="GND" gate="1" pin="P"/>
+<pinref part="GND" gate="G$1" pin="P"/>
 <wire x1="55.88" y1="22.86" x2="55.88" y2="17.78" width="0.1524" layer="91"/>
 <junction x="55.88" y="22.86"/>
 <wire x1="55.88" y1="17.78" x2="68.58" y2="17.78" width="0.1524" layer="91"/>
 <wire x1="68.58" y1="17.78" x2="68.58" y2="22.86" width="0.1524" layer="91"/>
-<pinref part="GNDP2" gate="1" pin="P"/>
+<pinref part="GNDP2" gate="G$1" pin="P"/>
 <wire x1="68.58" y1="22.86" x2="86.36" y2="22.86" width="0.1524" layer="91"/>
 </segment>
 <segment>
@@ -14303,13 +14281,13 @@ DIN A4, landscape with extra doc field</description>
 <wire x1="114.3" y1="101.6" x2="119.38" y2="101.6" width="0.1524" layer="91"/>
 <wire x1="119.38" y1="101.6" x2="119.38" y2="91.44" width="0.1524" layer="91"/>
 <junction x="114.3" y="101.6"/>
-<pinref part="LCD" gate="A" pin="1"/>
+<pinref part="LP3" gate="A" pin="1"/>
 </segment>
 <segment>
 <wire x1="134.62" y1="73.66" x2="142.24" y2="73.66" width="0.1524" layer="91"/>
 <pinref part="GND23" gate="1" pin="GND"/>
 <wire x1="142.24" y1="73.66" x2="142.24" y2="71.12" width="0.1524" layer="91"/>
-<pinref part="LCD" gate="A" pin="16"/>
+<pinref part="LP3" gate="A" pin="16"/>
 <pinref part="R2" gate="G$1" pin="2"/>
 <wire x1="157.48" y1="71.12" x2="142.24" y2="71.12" width="0.1524" layer="91"/>
 <junction x="142.24" y="71.12"/>
@@ -14333,12 +14311,12 @@ DIN A4, landscape with extra doc field</description>
 <pinref part="P+7" gate="VCC" pin="VCC"/>
 <wire x1="55.88" y1="50.8" x2="60.96" y2="50.8" width="0.1524" layer="91"/>
 <wire x1="38.1" y1="50.8" x2="38.1" y2="53.34" width="0.1524" layer="91"/>
-<pinref part="VCC" gate="1" pin="P"/>
+<pinref part="VCC" gate="G$1" pin="P"/>
 <wire x1="55.88" y1="50.8" x2="55.88" y2="55.88" width="0.1524" layer="91"/>
 <junction x="55.88" y="50.8"/>
 <wire x1="55.88" y1="55.88" x2="71.12" y2="55.88" width="0.1524" layer="91"/>
 <wire x1="71.12" y1="55.88" x2="71.12" y2="50.8" width="0.1524" layer="91"/>
-<pinref part="VCCP2" gate="1" pin="P"/>
+<pinref part="VCCP2" gate="G$1" pin="P"/>
 <wire x1="71.12" y1="50.8" x2="86.36" y2="50.8" width="0.1524" layer="91"/>
 </segment>
 <segment>
@@ -14349,41 +14327,41 @@ DIN A4, landscape with extra doc field</description>
 <wire x1="101.6" y1="101.6" x2="101.6" y2="73.66" width="0.1524" layer="91"/>
 <wire x1="101.6" y1="73.66" x2="127" y2="73.66" width="0.1524" layer="91"/>
 <junction x="101.6" y="101.6"/>
-<pinref part="LCD" gate="A" pin="15"/>
+<pinref part="LP3" gate="A" pin="15"/>
 </segment>
 <segment>
 <wire x1="134.62" y1="91.44" x2="142.24" y2="91.44" width="0.1524" layer="91"/>
 <pinref part="P+14" gate="VCC" pin="VCC"/>
 <wire x1="142.24" y1="91.44" x2="142.24" y2="96.52" width="0.1524" layer="91"/>
-<pinref part="LCD" gate="A" pin="2"/>
+<pinref part="LP3" gate="A" pin="2"/>
 </segment>
 </net>
 <net name="LCD_RS" class="0">
 <segment>
 <wire x1="152.4" y1="88.9" x2="134.62" y2="88.9" width="0.1524" layer="91"/>
 <label x="139.7" y="88.9" size="1.778" layer="95"/>
-<pinref part="LCD" gate="A" pin="4"/>
+<pinref part="LP3" gate="A" pin="4"/>
 </segment>
 </net>
 <net name="LCD_DB4" class="0">
 <segment>
 <wire x1="127" y1="78.74" x2="111.76" y2="78.74" width="0.1524" layer="91"/>
 <label x="111.76" y="78.74" size="1.778" layer="95"/>
-<pinref part="LCD" gate="A" pin="11"/>
+<pinref part="LP3" gate="A" pin="11"/>
 </segment>
 </net>
 <net name="LCD_DB5" class="0">
 <segment>
 <wire x1="152.4" y1="78.74" x2="134.62" y2="78.74" width="0.1524" layer="91"/>
 <label x="139.7" y="78.74" size="1.778" layer="95"/>
-<pinref part="LCD" gate="A" pin="12"/>
+<pinref part="LP3" gate="A" pin="12"/>
 </segment>
 </net>
 <net name="LCD_RW" class="0">
 <segment>
 <wire x1="127" y1="86.36" x2="111.76" y2="86.36" width="0.1524" layer="91"/>
 <label x="111.76" y="86.36" size="1.778" layer="95"/>
-<pinref part="LCD" gate="A" pin="5"/>
+<pinref part="LP3" gate="A" pin="5"/>
 </segment>
 </net>
 <net name="~RESET" class="0">
@@ -14458,7 +14436,7 @@ DIN A4, landscape with extra doc field</description>
 <pinref part="JP8" gate="A" pin="23"/>
 </segment>
 <segment>
-<pinref part="GNDI" gate="1" pin="P"/>
+<pinref part="GNDI" gate="G$1" pin="P"/>
 <pinref part="GND20" gate="G$1" pin="GNDIO"/>
 <wire x1="116.84" y1="22.86" x2="109.22" y2="22.86" width="0.1524" layer="91"/>
 <wire x1="109.22" y1="22.86" x2="109.22" y2="20.32" width="0.1524" layer="91"/>
@@ -14516,7 +14494,7 @@ DIN A4, landscape with extra doc field</description>
 <net name="PA7" class="0">
 <segment>
 <label x="40.64" y="45.72" size="1.778" layer="95"/>
-<pinref part="PA7" gate="1" pin="P"/>
+<pinref part="PA7" gate="G$1" pin="P"/>
 <wire x1="40.64" y1="45.72" x2="71.12" y2="45.72" width="0.1524" layer="91"/>
 </segment>
 </net>
@@ -14524,13 +14502,13 @@ DIN A4, landscape with extra doc field</description>
 <segment>
 <wire x1="40.64" y1="48.26" x2="66.04" y2="48.26" width="0.1524" layer="91"/>
 <label x="40.64" y="48.26" size="1.778" layer="95"/>
-<pinref part="PA6" gate="1" pin="P"/>
+<pinref part="PA6" gate="G$1" pin="P"/>
 </segment>
 </net>
 <net name="PC0" class="0">
 <segment>
 <label x="40.64" y="43.18" size="1.778" layer="95"/>
-<pinref part="PC0" gate="1" pin="P"/>
+<pinref part="PC0" gate="G$1" pin="P"/>
 <wire x1="40.64" y1="43.18" x2="76.2" y2="43.18" width="0.1524" layer="91"/>
 </segment>
 </net>
@@ -14538,20 +14516,20 @@ DIN A4, landscape with extra doc field</description>
 <segment>
 <wire x1="40.64" y1="40.64" x2="60.96" y2="40.64" width="0.1524" layer="91"/>
 <label x="40.64" y="40.64" size="1.778" layer="95"/>
-<pinref part="PC1" gate="1" pin="P"/>
+<pinref part="PC1" gate="G$1" pin="P"/>
 </segment>
 </net>
 <net name="PC2" class="0">
 <segment>
 <wire x1="40.64" y1="38.1" x2="66.04" y2="38.1" width="0.1524" layer="91"/>
 <label x="40.64" y="38.1" size="1.778" layer="95"/>
-<pinref part="PC2" gate="1" pin="P"/>
+<pinref part="PC2" gate="G$1" pin="P"/>
 </segment>
 </net>
 <net name="PC3" class="0">
 <segment>
 <label x="40.64" y="35.56" size="1.778" layer="95"/>
-<pinref part="PC3" gate="1" pin="P"/>
+<pinref part="PC3" gate="G$1" pin="P"/>
 <wire x1="40.64" y1="35.56" x2="71.12" y2="35.56" width="0.1524" layer="91"/>
 </segment>
 </net>
@@ -14559,13 +14537,13 @@ DIN A4, landscape with extra doc field</description>
 <segment>
 <wire x1="40.64" y1="33.02" x2="60.96" y2="33.02" width="0.1524" layer="91"/>
 <label x="40.64" y="33.02" size="1.778" layer="95"/>
-<pinref part="PC4" gate="1" pin="P"/>
+<pinref part="PC4" gate="G$1" pin="P"/>
 </segment>
 </net>
 <net name="PC6" class="0">
 <segment>
 <label x="40.64" y="27.94" size="1.778" layer="95"/>
-<pinref part="PC6" gate="1" pin="P"/>
+<pinref part="PC6" gate="G$1" pin="P"/>
 <wire x1="40.64" y1="27.94" x2="71.12" y2="27.94" width="0.1524" layer="91"/>
 </segment>
 </net>
@@ -14573,13 +14551,13 @@ DIN A4, landscape with extra doc field</description>
 <segment>
 <wire x1="40.64" y1="30.48" x2="66.04" y2="30.48" width="0.1524" layer="91"/>
 <label x="40.64" y="30.48" size="1.778" layer="95"/>
-<pinref part="PC5" gate="1" pin="P"/>
+<pinref part="PC5" gate="G$1" pin="P"/>
 </segment>
 </net>
 <net name="PC7" class="0">
 <segment>
 <label x="40.64" y="25.4" size="1.778" layer="95"/>
-<pinref part="PC7" gate="1" pin="P"/>
+<pinref part="PC7" gate="G$1" pin="P"/>
 <wire x1="40.64" y1="25.4" x2="76.2" y2="25.4" width="0.1524" layer="91"/>
 </segment>
 </net>
@@ -14609,7 +14587,7 @@ DIN A4, landscape with extra doc field</description>
 <wire x1="160.02" y1="137.16" x2="160.02" y2="134.62" width="0.1524" layer="91"/>
 </segment>
 <segment>
-<pinref part="GNDO" gate="1" pin="P"/>
+<pinref part="GNDO" gate="G$1" pin="P"/>
 <pinref part="GNDI6" gate="G$1" pin="GNDI"/>
 <wire x1="144.78" y1="22.86" x2="137.16" y2="22.86" width="0.1524" layer="91"/>
 <wire x1="137.16" y1="22.86" x2="137.16" y2="20.32" width="0.1524" layer="91"/>
@@ -14648,7 +14626,7 @@ DIN A4, landscape with extra doc field</description>
 <wire x1="144.78" y1="134.62" x2="152.4" y2="134.62" width="0.1524" layer="91"/>
 </segment>
 <segment>
-<pinref part="+5VO" gate="1" pin="P"/>
+<pinref part="+5VO" gate="G$1" pin="P"/>
 <pinref part="VDD6" gate="G$1" pin="VDD"/>
 <wire x1="144.78" y1="30.48" x2="137.16" y2="30.48" width="0.1524" layer="91"/>
 <wire x1="137.16" y1="30.48" x2="137.16" y2="35.56" width="0.1524" layer="91"/>
@@ -14683,7 +14661,7 @@ DIN A4, landscape with extra doc field</description>
 <pinref part="JP8" gate="A" pin="20"/>
 </segment>
 <segment>
-<pinref part="+5VI" gate="1" pin="P"/>
+<pinref part="+5VI" gate="G$1" pin="P"/>
 <pinref part="P+12" gate="1" pin="+5V"/>
 <wire x1="116.84" y1="30.48" x2="109.22" y2="30.48" width="0.1524" layer="91"/>
 <wire x1="109.22" y1="30.48" x2="109.22" y2="35.56" width="0.1524" layer="91"/>
@@ -14693,27 +14671,27 @@ DIN A4, landscape with extra doc field</description>
 <segment>
 <wire x1="152.4" y1="86.36" x2="134.62" y2="86.36" width="0.1524" layer="91"/>
 <label x="139.7" y="86.36" size="1.778" layer="95"/>
-<pinref part="LCD" gate="A" pin="6"/>
+<pinref part="LP3" gate="A" pin="6"/>
 </segment>
 </net>
 <net name="LCD_UNU" class="0">
 <segment>
 <wire x1="127" y1="83.82" x2="111.76" y2="83.82" width="0.1524" layer="91"/>
 <label x="111.76" y="83.82" size="1.778" layer="95"/>
-<pinref part="LCD" gate="A" pin="7"/>
+<pinref part="LP3" gate="A" pin="7"/>
 </segment>
 <segment>
 <wire x1="127" y1="81.28" x2="111.76" y2="81.28" width="0.1524" layer="91"/>
 <label x="111.76" y="81.28" size="1.778" layer="95"/>
-<pinref part="LCD" gate="A" pin="9"/>
+<pinref part="LP3" gate="A" pin="9"/>
 </segment>
 <segment>
 <wire x1="134.62" y1="83.82" x2="152.4" y2="83.82" width="0.1524" layer="91"/>
 <label x="139.7" y="83.82" size="1.778" layer="95"/>
-<pinref part="LCD" gate="A" pin="8"/>
+<pinref part="LP3" gate="A" pin="8"/>
 <wire x1="134.62" y1="81.28" x2="152.4" y2="81.28" width="0.1524" layer="91"/>
 <label x="139.7" y="81.28" size="1.778" layer="95"/>
-<pinref part="LCD" gate="A" pin="10"/>
+<pinref part="LP3" gate="A" pin="10"/>
 <wire x1="152.4" y1="83.82" x2="152.4" y2="81.28" width="0.1524" layer="91"/>
 <pinref part="R2" gate="G$1" pin="1"/>
 <wire x1="152.4" y1="81.28" x2="157.48" y2="81.28" width="0.1524" layer="91"/>
@@ -14726,21 +14704,21 @@ DIN A4, landscape with extra doc field</description>
 <wire x1="106.68" y1="96.52" x2="106.68" y2="88.9" width="0.1524" layer="91"/>
 <wire x1="106.68" y1="88.9" x2="127" y2="88.9" width="0.1524" layer="91"/>
 <label x="111.76" y="88.9" size="1.778" layer="95"/>
-<pinref part="LCD" gate="A" pin="3"/>
+<pinref part="LP3" gate="A" pin="3"/>
 </segment>
 </net>
 <net name="LCD_DB6" class="0">
 <segment>
 <wire x1="127" y1="76.2" x2="111.76" y2="76.2" width="0.1524" layer="91"/>
 <label x="111.76" y="76.2" size="1.778" layer="95"/>
-<pinref part="LCD" gate="A" pin="13"/>
+<pinref part="LP3" gate="A" pin="13"/>
 </segment>
 </net>
 <net name="LCD_DB7" class="0">
 <segment>
 <wire x1="152.4" y1="76.2" x2="134.62" y2="76.2" width="0.1524" layer="91"/>
 <label x="139.7" y="76.2" size="1.778" layer="95"/>
-<pinref part="LCD" gate="A" pin="14"/>
+<pinref part="LP3" gate="A" pin="14"/>
 </segment>
 </net>
 </nets>
