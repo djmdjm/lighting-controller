@@ -18,6 +18,8 @@
 #error Must define F_CPU on commandline
 #endif
 
+/* XXX maintain location pointer to avoid getpos() calls */
+
 #include <stddef.h>
 #include <avr/io.h>
 #include <util/delay.h>
@@ -39,8 +41,18 @@
 #define LCD_CTL_MASK	((1 << LCD_CTL_RS) | (1 << LCD_CTL_RW))
 
 /* LCD constants */
-#define LCD_ROW0_ADDR	0
-#define LCD_ROW1_ADDR 0x40
+#if LCD_ROWS == 4
+static const uint8_t row_addrs[LCD_ROWS] = { 0x00, 0x40, 0x14, 0x54 };
+#elif LCD_ROWS == 2
+static const uint8_t row_addrs[LCD_ROWS] = { 0x00, 0x40 };
+#elif LCD_ROWS == 1
+static const uint8_t row_addrs[LCD_ROWS] = { 0x00 };
+#else
+# error Unsupported LCD_ROWS
+#endif
+
+#define LCD_NUM_CG_CHARS	8
+#define LCD_CG_MASK		0x1f
 
 /* LCD commands for write */
 #define LCD_C_CLEAR		0x01	/* Clear display */
@@ -227,10 +239,22 @@ lcd_entry_mode(int rtl, int shift)
 	    (shift ? LCD_O_ENTRY_SHIFT : 0));
 }
 
+/* Clear the screen */
 void
 lcd_clear(void)
 {
 	lcd_command(0, LCD_C_CLEAR);
+}
+
+/* Clear to the end of the current line only */
+void
+lcd_clear_eol(void)
+{
+	int x, i;
+
+	lcd_getpos(&x, NULL);
+	for (i = LCD_COLS - x; i > 0; i--)
+		lcd_command(1, ' ');
 }
 
 /* Write a string to the LCD without bounds-checking */
@@ -248,7 +272,7 @@ lcd_error(const char *s)
 	lcd_clear();
 	lcd_home();
 	lcd_write_string_raw("XXXXXXXXXXXXXXXXXXXX", 20);
-	lcd_command(0, LCD_C_SET_DDRAM_ADDR | LCD_ROW1_ADDR);
+	lcd_command(0, LCD_C_SET_DDRAM_ADDR | row_addrs[(LCD_ROWS - 1)]);
 	lcd_write_string_raw(s, 20);
 	lcd_home();
 }
@@ -260,29 +284,31 @@ lcd_moveto(int x, int y)
 		lcd_error("lcd moveto error");
 		return;
 	}
-	lcd_command(0, LCD_C_SET_DDRAM_ADDR |
-	    (x + (y == 0 ? LCD_ROW0_ADDR : LCD_ROW1_ADDR)));
+	lcd_command(0, LCD_C_SET_DDRAM_ADDR | (row_addrs[y] + x));
 }
 
 void
 lcd_getpos(int *x, int *y)
 {
-	uint8_t addr = lcd_waitbusy();
+	uint8_t i, xx, yy, addr = lcd_waitbusy();
 
-	if (addr >= LCD_ROW1_ADDR && addr < (LCD_ROW1_ADDR + LCD_COLS)) {
-		if (x != NULL)
-			*x = addr - LCD_ROW1_ADDR;
-		if (y != NULL)
-			*y = 1;
-	} else if (addr >= LCD_ROW0_ADDR && addr < (LCD_ROW1_ADDR + LCD_COLS)) {
-		if (x != NULL)
-			*x = addr - LCD_ROW0_ADDR;
-		if (y != NULL)
-			*y = 0;
-	} else {
+	xx = yy = 0xff;
+	for (i = 0; i < LCD_ROWS; i++) {
+		if (addr >= row_addrs[i] && addr < (row_addrs[i] + LCD_COLS)) {
+			xx = addr - row_addrs[i];
+			yy = i;
+			break;
+		}
+	}
+	if (xx >= LCD_COLS || yy >= LCD_ROWS) {
 		/* wtf? */
 		*x = *y = 0;
-		lcd_error("lcd addr crazy");
+		lcd_error("bad lcd address");
+	} else {
+		if (x != NULL)
+			*x = xx;
+		if (y != NULL)
+			*y = yy;
 	}
 }
 
@@ -295,6 +321,58 @@ lcd_string(const char *s)
 	if (x >= LCD_COLS)
 		return; /* Shouldn't happen */
 	lcd_write_string_raw(s, LCD_COLS - x);
+}
+
+void
+lcd_chars(const char *s, size_t len)
+{
+	int x;
+
+	lcd_getpos(&x, NULL);
+	if (x >= LCD_COLS)
+		return; /* Shouldn't happen */
+	if ((len + x) >= LCD_COLS)
+		len = LCD_COLS - x;
+	for (; len > 0; len--)
+		lcd_command(1, *s++);
+}
+
+void
+lcd_char(char c)
+{
+	int x;
+
+	lcd_getpos(&x, NULL);
+	if (x >= LCD_COLS)
+		return;
+	lcd_command(1, c);
+}
+
+void
+lcd_fill(char c, size_t n)
+{
+	int x;
+
+	lcd_getpos(&x, NULL);
+	if (x >= LCD_COLS)
+		return;
+	if ((n + x) >= LCD_COLS)
+		n = LCD_COLS - x;
+	while (n-- > 0)
+		lcd_command(1, c);
+}
+
+void
+lcd_program_char(int c, uint8_t *data, size_t len)
+{
+	if (c > LCD_NUM_CG_CHARS || len != 8) {
+		lcd_error("bad character data");
+		return;
+	}
+	lcd_command(0, LCD_C_SET_CGRAM_ADDR | (c * 8));
+	for (; len > 0; len--)
+		lcd_command(1, *data++);
+	lcd_home(); /* back to display memory */
 }
 
 void

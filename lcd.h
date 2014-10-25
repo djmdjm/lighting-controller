@@ -19,29 +19,29 @@
 
 /* Driver for a HD44870-style 20x2 LCD */
 
-#define LCD_ROWS	2
+#define LCD_ROWS	4
 #define LCD_COLS	20
 
 /*
  * Pin/port configuration. It's possible to have the control and data signals
  * on different ports.
  */
-#define LCD_CTL_DDR	DDRF
-#define LCD_CTL_PORT	PORTF
-#define LCD_CTL_RS	0
-#define LCD_CTL_RW	1
+#define LCD_CTL_DDR	DDRD
+#define LCD_CTL_PORT	PORTD
+#define LCD_CTL_RS	6
+#define LCD_CTL_RW	5
 
-#define LCD_EN_DDR	DDRF
-#define LCD_EN_PORT	PORTF
-#define LCD_EN		2
+#define LCD_EN_DDR	DDRD
+#define LCD_EN_PORT	PORTD
+#define LCD_EN		4
 
-#define LCD_DB_DDR	DDRF
-#define LCD_DB_PORT	PORTF
-#define LCD_DB_PIN	PINF
-#define LCD_DB_4	4
-#define LCD_DB_5	5
-#define LCD_DB_6	6
-#define LCD_DB_7	7
+#define LCD_DB_DDR	DDRD
+#define LCD_DB_PORT	PORTD
+#define LCD_DB_PIN	PIND
+#define LCD_DB_4	3
+#define LCD_DB_5	2
+#define LCD_DB_6	1
+#define LCD_DB_7	0
 
 /* LCD special characters */
 #define LCD_CHAR_ARROW_R	0x7e
@@ -93,7 +93,7 @@ void lcd_display(int display_on, int cursor_on, int blink_on);
 
 /*
  * Control the entry mode, whether text flow is left-to-right (rtl = 0) or
- * right-to-left (rtl = 1) and whether the cursor shifts after text entry
+ 0 right-to-left (rtl = 1) and whether the cursor shifts after text entry
  * (shift = 0) or the text * shifts and the cursor remains stationary
  * (shift = 1).
  */
@@ -101,6 +101,9 @@ void lcd_entry_mode(int rtl, int shift);
 
 /* Clear the screen */
 void lcd_clear(void);
+
+/* Clear to the end of line only */
+void lcd_clear_eol(void);
 
 /* Return the cursor to (0, 0) */
 void lcd_home(void);
@@ -119,5 +122,23 @@ void lcd_getpos(int *x, int *y);
  * the display will be truncated.
  */
 void lcd_string(const char *s);
+
+/*
+ * Write an array of characters to the screen. Useful for writing the
+ * \0 custom character.
+ */
+void lcd_chars(const char *s, size_t len);
+
+/* Write a single character to the screen. */
+void lcd_char(char c);
+
+/* Write 'n' characters of 'c' to the screen. */
+void lcd_fill(char c, size_t n);
+
+/*
+ * Program one of the user-defined characters.
+ * data must be an 8 byte array containing the row bitmaps of the character.
+ */
+void lcd_program_char(int c, uint8_t *data, size_t len);
 
 #endif /* LCD_H */
