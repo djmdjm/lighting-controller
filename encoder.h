@@ -22,13 +22,13 @@
 #define ENC_PORT		PORTB
 #define ENC_PIN			PINB
 #define ENC_DDR			DDRB
-#define ENC_VECT		PCINT0_vect
-#define ENC_PCIE		PCIE0
-#define ENC_PCMSK		PCMSK0
-#define ENC_PIN_A		5
-#define ENC_PIN_B		4
-#define ENC_INT_A		PCINT4
-#define ENC_INT_B		PCINT5
+#define ENC_VECT		PCINT1_vect
+#define ENC_PCIE		PCIE1
+#define ENC_PCMSK		PCMSK1
+#define ENC_PIN_A		1
+#define ENC_PIN_B		0
+#define ENC_INT_A		PCINT9
+#define ENC_INT_B		PCINT8
 #define ENC_PULSE_PER_DETENT	2
 
 /*
@@ -37,6 +37,7 @@
  * from a handler elsewhere.
  */
 /* #define ENC_INTERRUPT_HANDLER */
+#define ENC_INTERRUPT_HANDLER
 
 /* Setup to use the rotary encoder */
 void encoder_setup(void);
