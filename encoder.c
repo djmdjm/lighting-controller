@@ -68,7 +68,7 @@ encoder_interrupt(void)
 #ifdef ENC_INTERRUPT_HANDLER
 ISR(ENC_VECT)
 {
-	encoder_interrupt()
+	encoder_interrupt();
 }
 #endif
 
