@@ -18,30 +18,31 @@ WARNFLAGS+=-Werror -Wno-type-limits -Wno-unused
 
 CFLAGS=-mmcu=${MCU} -DF_CPU=${CPUFREQ}UL ${WARNFLAGS} ${OPT} -std=gnu99
 CFLAGS+=-funsigned-char -funsigned-bitfields -fpack-struct -fshort-enums
+CFLAGS+=-g
 
 #LIBAVR_OBJS=demux.o rgbled.o num_format.o spi.o ad56x8.o encoder.o event.o
 #LIBAVR_OBJS+=mcp23s1x.o midi.o lcd.o
-LIBAVR_OBJS=num_format.o lcd.o event.o encoder.o
+LIBAVR_OBJS=num_format.o lcd.o event.o encoder.o ui.o
 
 CC=avr-gcc
 OBJCOPY=avr-objcopy
 
-all: sequencer.hex
+all: firmware.hex
 
-sequencer.elf: main.o ${LIBAVR_OBJS}
+firmware.elf: main.o ${LIBAVR_OBJS}
 	${CC} ${CFLAGS} -o $@ main.o ${LIBAVR_OBJS}
 
-sequencer.hex: sequencer.elf
-	${OBJCOPY} -j .text -j .data -O ihex sequencer.elf $@
+firmware.hex: firmware.elf
+	${OBJCOPY} -j .text -j .data -O ihex firmware.elf $@
 
 load: ${LOADER}
 
-teensy: sequencer.hex
-	${SUDO} teensy_loader_cli -v -w -mmcu=${MCU} sequencer.hex
+teensy: firmware.hex
+	${SUDO} teensy_loader_cli -v -w -mmcu=${MCU} firmware.hex
 
-avrdude: sequencer.hex
+avrdude: firmware.hex
 	avrdude -P ${AVRDUDE_PORT} -p ${AVRDUDE_PART} -c ${AVRDUDE_HW} \
-	    ${AVRDUDE_EXTRA} -e -U flash:w:sequencer.hex
+	    ${AVRDUDE_EXTRA} -e -U flash:w:firmware.hex
 
 clean:
 	rm -f *.elf *.hex *.o *.core *.hex

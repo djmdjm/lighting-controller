@@ -16,6 +16,7 @@
 
 #include <avr/io.h>
 #include <avr/interrupt.h>
+#include <avr/sleep.h>
 #include <util/delay.h>
 #include <stddef.h>
 #include <stdint.h>
@@ -29,343 +30,258 @@
 #include "ad56x8.h"
 #include "encoder.h"
 #include "event.h"
+#include "event-types.h"
 #include "mcp23s1x.h"
 #include "midi.h"
+#include "ui.h"
 
-struct selection {
-	size_t n;
-	const char *labels[];
-};
+static int pb_encoder = 1;
+static int pb_button = 0;
+static int running = 0;
 
-#define MODE_ONESHOT	0
-#define MODE_STROBE	1
-#define MODE_MAX	2
-static const struct selection modes = {
-	MODE_MAX, { "oneshot", "strobe " }
-};
+/* Interrupt for the digitial inputs */
+ISR(PCINT0_vect)
+{
+	/* Nothing here - we just need an interrupt to leave sleep. */
+}
 
-#define READY_NO	0
-#define READY_YES	1
-#define READY_MAX	2
-static const struct selection ready = {
-	READY_MAX, { " ready ", "*READY*" }
-};
+/* Interrupt for pushbuttons and the rotaty encoder */
+ISR(PCINT1_vect)
+{
+	int pb;
 
-#define IN_NONE		0
-#define IN_CHAN_1	1
-#define IN_CHAN_1_NOT	2
-#define IN_CHAN_2	3
-#define IN_CHAN_2_NOT	4
-#define IN_MANUAL	5
-#define IN_MAX		6
-static const struct selection inputs = {
-	IN_MAX, { "  ", " 1", "!1", " 2", "!2", " M" }
-};
+	if (running)
+		return; /* no events */
 
-#define COMB_NONE	0
-#define COMB_OR		1
-#define COMB_AND	2
-#define COMB_XOR	3
-#define COMB_MAX	4
-static const struct selection combines = {
-	COMB_MAX, { " ", "|", "&", "^" }
-};
+	encoder_interrupt();
+	pb = (PINB >> 2) & 1;
+	if (pb != pb_encoder) {
+		/* NB. encoder button is active-low */
+		event_enqueue(EV_BUTTON, 0, !pb, 0, 0);
+		pb_encoder = pb;
+	}
+	pb = (PINB >> 3) & 1;
+	if (pb != pb_button) {
+		event_enqueue(EV_BUTTON, 1, pb, 0, 0);
+		pb_button = pb;
+	}
+}
 
-#define DUR_TICK	0
-#define DUR_MICROSEC	1
-#define DUR_MILLISEC	2
-#define DUR_SEC		3
-#define DUR_MAX		4
-static const struct selection durations = {
-	DUR_MAX, { "cy", "\xe4s", "ms", "s " }
-};
+static void
+sleep_for_interrupt(void)
+{
+	set_sleep_mode(SLEEP_MODE_IDLE);
+	cli();
+	sleep_enable();
+	sei();
+	sleep_cpu();
+	sleep_disable();
+}
 
-#define RATE_MHZ		0
-#define RATE_KHZ		1
-#define RATE_HZ			2
-#define RATE_MILLI_HZ		3
-#define RATE_MAX		4
-static const struct selection rates = {
-	RATE_MAX, { "MHz", "kHz", "Hz ", "mHz" }
-};
-
-/* Input configuration for a channel */
-struct channel_trigger {
-	int input[2];
-	int comb;
-};
-
-/* Main configuration */
-struct config {
-	int mode;
-	int ready;
-	struct channel_trigger ch1, ch2;
-	int delay, delay_unit;
-	int on, on_unit;
-	/* Strobe */
-	int freq, freq_unit;
-	int len, len_unit;
-	/* Oneshot */
-	int holdoff, holdoff_unit;
-};
-
-static const struct config default_config = {
-	MODE_ONESHOT,
-	READY_NO,
-	/* Channel 1 */
-	{ { IN_CHAN_1, IN_NONE }, COMB_NONE },
-	/* Channel 2 */
-	{ { IN_CHAN_2, IN_NONE }, COMB_NONE },
-	/* Delay */
-	100, DUR_MILLISEC,
-	/* On duration */
-	10, DUR_MILLISEC,
-	/* Strobe: freq */
-	10, RATE_HZ,
-	/* Strobe: length */
-	1, DUR_SEC,
-	/* Oneshot: holdoff time */
-	10, DUR_SEC,
-};
-
-static struct config cfg;
-
-/* Identifiers for UI inputs */
-enum control_id {
-	C_MODE,
-	C_READY,
-	C_CH1_IN1, C_CH1_COMBINE, C_CH1_IN2,
-	C_CH2_IN1, C_CH2_COMBINE, C_CH2_IN2,
-	C_DELAY, C_DELAY_U,
-	C_ON, C_ON_U,
-	C_FREQ, C_FREQ_U,
-	C_DURATION, C_DURATION_U,
-	C_HOLDOFF, C_HOLDOFF_U,
-};
-
-/* Identifiers for different types of input */
-enum control_type {
-	I_LAB,	/* Uneditable label */
-	I_SEL,	/* Selection list */
-	I_INT,	/* Integer */
-	I_OTH,	/* Other: special case */
-};
-
-/*
- * UI element and layout/editing information
- * NB. must be increasing X, Y order.
- */
-struct control {
-	int x, y;
-	int id;
-	int type;
-	size_t int_width;
-	char *label;
-	int *value;
-	const struct selection *selection;
-};
-
-/* UI for oneshot mode */
-#define NUM_CONTROLS_ONESHOT 20
-static const struct control oneshot_controls[NUM_CONTROLS_ONESHOT] = {
-	{ 0,  0, -1,		I_LAB, 0, "Mode:", NULL, NULL },
-	{ 5,  0, C_MODE,	I_SEL, 0, NULL, &cfg.mode, &modes },
-	{ 13, 0, C_READY,	I_SEL, 0, NULL, &cfg.ready, &ready },
-	{ 0,  1, -1,		I_LAB, 0, "CH1:", NULL, NULL },
-	{ 4,  1, C_CH1_IN1,	I_SEL, 0, NULL, &cfg.ch1.input[0], &inputs },
-	{ 6,  1, C_CH1_COMBINE,	I_SEL, 0, NULL, &cfg.ch1.comb, &combines },
-	{ 7,  1, C_CH1_IN2,	I_SEL, 0, NULL, &cfg.ch1.input[1], &inputs },
-	{ 11, 1, -1,		I_LAB, 0, "CH2:", NULL, NULL },
-	{ 15, 1, C_CH2_IN1,	I_SEL, 0, NULL, &cfg.ch2.input[0], &inputs },
-	{ 17, 1, C_CH2_COMBINE, I_SEL, 0, NULL, &cfg.ch2.comb, &combines },
-	{ 18, 1, C_CH2_IN2,	I_SEL, 0, NULL, &cfg.ch2.input[1], &inputs },
-	{ 0,  2, -1,		I_LAB, 0, "Delay:", NULL, NULL },
-	{ 6,  2, C_DELAY,	I_INT, 3, NULL, &cfg.delay, NULL },
-	{ 9,  2, C_DELAY_U,	I_SEL, 0, NULL, &cfg.delay_unit, &durations },
-	{ 12, 2, -1,		I_LAB, 0, "On:", NULL, NULL },
-	{ 15, 2, C_ON,		I_INT, 3, NULL, &cfg.on, NULL },
-	{ 18, 2, C_ON_U,	I_SEL, 0, NULL, &cfg.on_unit, &durations },
-	{ 0,  3, -1,		I_LAB, 0, "Holdoff:", NULL, NULL },
-	{ 8,  3, C_HOLDOFF,	I_OTH, 3, NULL, &cfg.holdoff, NULL },
-	{ 11, 3, C_HOLDOFF_U,	I_SEL, 0, NULL, &cfg.holdoff_unit, &durations },
-};
-
-/* UI for strobe mode */
-#define NUM_CONTROLS_STROBE 23
-static const struct control strobe_controls[NUM_CONTROLS_STROBE] = {
-	{ 0,  0, -1,		I_LAB, 0, "Mode:", NULL, NULL },
-	{ 5,  0, C_MODE,	I_SEL, 0, NULL, &cfg.mode, &modes },
-	{ 13, 0, C_READY,	I_SEL, 0, NULL, &cfg.ready, &ready },
-	{ 0,  1, -1,		I_LAB, 0, "CH1:", NULL, NULL },
-	{ 4,  1, C_CH1_IN1,	I_SEL, 0, NULL, &cfg.ch1.input[0], &inputs },
-	{ 6,  1, C_CH1_COMBINE,	I_SEL, 0, NULL, &cfg.ch1.comb, &combines },
-	{ 7,  1, C_CH1_IN2,	I_SEL, 0, NULL, &cfg.ch1.input[1], &inputs },
-	{ 0,  1, -1,		I_LAB, 0, "CH2:", NULL, NULL },
-	{ 12, 1, C_CH2_IN1,	I_SEL, 0, NULL, &cfg.ch2.input[0], &inputs },
-	{ 14, 1, C_CH2_COMBINE, I_SEL, 0, NULL, &cfg.ch2.comb, &combines },
-	{ 15, 1, C_CH2_IN2,	I_SEL, 0, NULL, &cfg.ch2.input[1], &inputs },
-	{ 0,  2, -1,		I_LAB, 0, "Delay:", NULL, NULL },
-	{ 6,  2, C_DELAY,	I_INT, 3, NULL, &cfg.delay, NULL },
-	{ 9,  2, C_DELAY_U,	I_SEL, 0, NULL, &cfg.delay_unit, &durations },
-	{ 12, 2, -1,		I_LAB, 0, "On:", NULL, NULL },
-	{ 15, 2, C_ON,		I_INT, 3, NULL, &cfg.on, NULL },
-	{ 18, 2, C_ON_U,	I_SEL, 0, NULL, &cfg.on_unit, &durations },
-	{ 5,  3, -1,		I_LAB, 0, "Freq:", NULL, NULL },
-	{ 5,  3, C_FREQ,	I_INT, 3, NULL, &cfg.freq, NULL },
-	{ 8,  3, C_FREQ_U,	I_SEL, 0, NULL, &cfg.freq_unit, &rates },
-	{ 13, 3, -1,		I_LAB, 0, "L:", NULL, NULL },
-	{ 15, 3, C_DURATION,	I_INT, 3, NULL, &cfg.len, NULL },
-	{ 18, 3, C_DURATION_U,	I_SEL, 0, NULL, &cfg.len_unit, &durations },
-};
-
-/*
- * Returns true if the current control should be skipped due to the
- * config making it irrelevant.
- */
 static int
-control_skipped(int v)
+evaluate_input(int channel_mode)
 {
-	return (v < 0 ||
-	    (v == C_CH1_IN2 && cfg.ch1.comb == COMB_NONE) ||
-	    (v == C_CH2_IN2 && cfg.ch2.comb == COMB_NONE) ||
-	    (v == C_HOLDOFF_U && cfg.holdoff == -1));
+	/* Digital inputs and encoder are active-high */
+	switch (channel_mode) {
+	case TRIG_CHAN_1:
+		return (PINA & (1<<4)) == 0;
+	case TRIG_CHAN_1_NOT:
+		return (PINA & (1<<4)) != 0;
+	case TRIG_CHAN_2:
+		return (PINA & (1<<5)) == 0;
+	case TRIG_CHAN_2_NOT:
+		return (PINA & (1<<5)) != 0;
+	case TRIG_MANUAL:
+		return (PINB & (1<<3)) == 0;
+	case TRIG_NONE:
+	default:
+		return 0;
+	}
+}
+
+static uint32_t
+duration_to_cycles(int n, int unit)
+{
+	switch (unit) {
+	case DUR_MICROSEC:
+		return n * (F_CPU / 1000000);
+	case DUR_MILLISEC:
+		return n * (F_CPU / 1000);
+	case DUR_SEC:
+		return n * F_CPU;
+	}
+	return 0;
+}
+
+static uint32_t
+freq_to_cycles(int f, int unit)
+{
+	switch (unit) {
+	case RATE_MHZ:
+		return (F_CPU / 1000000) / f;
+	case RATE_KHZ:
+		return (F_CPU / 1000) / f;
+	case RATE_HZ:
+		return F_CPU / f;
+	case RATE_MILLI_HZ:
+		return (F_CPU * 1000) / f;
+	}
+	return 0;
 }
 
 /*
- * Look up the index of the next control. 'current' is the index of the
- * current control. This handles controls that are disabled by the current
- * configuration (e.g. units for holdoff when manual holdoff selected).
- * If 'dec' is set then decrement rather than increment the control.
+ * prepare_wait() / LONG_WAIT() implement delays accurate to 6 cycles
+ * over ranges up to ~1k sec.
  */
-static uint8_t
-incdec_control_oneshot(uint8_t current, int dec)
-{
-	uint8_t next, v;
-	const struct control *controls = cfg.mode == MODE_ONESHOT ?
-	    oneshot_controls : strobe_controls;
-	size_t control_max = cfg.mode == MODE_ONESHOT ?
-	    NUM_CONTROLS_ONESHOT : NUM_CONTROLS_STROBE;
 
-	do {
-		next = (dec ? (next - 1) : (next + 1)) % control_max;
-	} while (control_skipped(controls[next].id));
+struct longwait {
+	uint32_t t50m;
+	uint16_t t768;
+	uint8_t t3;
+	uint8_t tiny;
+};
 
-	return next;
+static void
+dump_longwait(struct longwait *lw) {
+	lcd_string(ntod(lw->t50m));
+	lcd_char(' ');
+	lcd_string(ntod(lw->t768));
+	lcd_char(' ');
+	lcd_string(ntod(lw->t3));
+	lcd_char(' ');
+	lcd_string(ntod(lw->tiny));
+	lcd_clear_eol();
 }
 
 static void
-draw(uint8_t active)
+prepare_wait(uint32_t t, struct longwait *lw)
 {
-	size_t i;
-	int x, cursor_x, cursor_y;
-	char nbuf[16];
-	const struct control *controls = cfg.mode == MODE_ONESHOT ?
-	    oneshot_controls : strobe_controls;
-	size_t control_max = cfg.mode == MODE_ONESHOT ?
-	    NUM_CONTROLS_ONESHOT : NUM_CONTROLS_STROBE;
-
-	for (i = 0; i < control_max; i++) {
-		const struct control *ctrl = &controls[i];
-		const struct control *next_ctrl = (i + 1 > control_max) ?
-		    &controls[i + 1] : NULL;
-
-		/* Don't draw skipped controls */
-		if (ctrl->id != -1 && control_skipped(ctrl->id)) {
-			/* Blank characters to the next UI element */
-			lcd_getpos(&x, NULL);
-			if (next_ctrl == NULL || next_ctrl->y != ctrl->y)
-				lcd_clear_eol();
-			else if (x < next_ctrl->x)
-				lcd_fill(' ', next_ctrl->x - x);
-			continue;
-		}
-
-		/* Record cursor position for editing */
-		if (active == i) {
-			cursor_x = ctrl->x;
-			cursor_y = ctrl->y;
-		}
-		/* Draw control */
-		lcd_moveto(ctrl->x, ctrl->y);
-		switch (ctrl->type) {
-		case I_LAB:
-			lcd_string(ctrl->label);
-			break;
-		case I_INT:
-			if (ctrl->int_width >= sizeof(nbuf)) {
-				lcd_string("BAD INT WIDTH");
-				return;
-			}
-			lcd_string(rjustify(ntod(*ctrl->value),
-			    nbuf, ctrl->int_width + 1));
-			break;
-		case I_SEL:
-			if (*ctrl->value < 0 || ctrl->selection == NULL ||
-			    (size_t)*ctrl->value > ctrl->selection->n) {
-				lcd_string("BAD SELECTION");
-				return;
-			}
-			lcd_string(ctrl->selection->labels[*ctrl->value]);
-			break;
-		case I_OTH:
-			switch (ctrl->id) {
-			case C_HOLDOFF:
-				if (*ctrl->value == -1)
-					lcd_string("MAN");
-				else if (ctrl->int_width >= sizeof(nbuf)) {
-					lcd_string("BAD INT WIDTH");
-					return;
-				} else {
-					lcd_string(rjustify(ntod(*ctrl->value),
-					    nbuf, ctrl->int_width + 1));
-				}
-				break;
-			}
-			break;
-		}
+	memset(lw, 0, sizeof(*lw));
+	/* Tiny delays use nop sled */
+	if (t < 40) {
+		lw->tiny = 40 - (t < 14 ? 0 : t - 14);
+		return;
 	}
+	/* Take off some cycles for comparisons (determined empirically) */
+	t -= 36;
+	lw->t50m = t / 50000000; /* ~max 256*3 cycles that fit a u16 */
+	t %= 50000000;
+	lw->t768 = t / 768; /* Max _delay_loop_1() length = 236*3 cycles */
+	t %= 768;
+	lw->t3 = t / 3; /* _delay_loop_1() takes 3 cycles per loop */
 }
 
-static void
-strobe_entry(void)
-{
-	uint8_t editing;
-	uint8_t active;
+#define LONG_WAIT(lw) do { \
+	uint32_t __i; \
+	uint16_t __j; \
+	\
+	if (lw.tiny != 0) { \
+		/* Really short delays jump into a nop sled */ \
+		__asm__ volatile ( \
+			"ldi r31, pm_hi8(1f)" "\n\t" \
+			"ldi r30, pm_lo8(1f)" "\n\t" \
+			"add r30, %0" "\n\t" \
+			"adc r31, __zero_reg__" "\n\t" \
+			"ijmp" "\n\t" \
+			"1:" "\n\t" \
+			"nop" "\n\t" \
+			"nop" "\n\t" \
+			"nop" "\n\t" \
+			"nop" "\n\t" \
+			"nop" "\n\t" \
+			"nop" "\n\t" \
+			"nop" "\n\t" \
+			"nop" "\n\t" \
+			"nop" "\n\t" \
+			"nop" "\n\t" \
+			"nop" "\n\t" \
+			"nop" "\n\t" \
+			"nop" "\n\t" \
+			"nop" "\n\t" \
+			"nop" "\n\t" \
+			"nop" "\n\t" \
+			"nop" "\n\t" \
+			"nop" "\n\t" \
+			"nop" "\n\t" \
+			"nop" "\n\t" \
+			"nop" "\n\t" \
+			"nop" "\n\t" \
+			"nop" "\n\t" \
+			"nop" "\n\t" \
+			"nop" "\n\t" \
+			"nop" "\n\t" \
+			"nop" "\n\t" \
+			"nop" "\n\t" \
+			"nop" "\n\t" \
+			"nop" "\n\t" \
+			"nop" "\n\t" \
+			"nop" "\n\t" \
+			"nop" "\n\t" \
+			"nop" "\n\t" \
+			"nop" "\n\t" \
+			"nop" "\n\t" \
+			"nop" "\n\t" \
+			"nop" "\n\t" \
+			"nop" "\n\t" \
+			"nop" "\n\t" \
+			: /* no output */ \
+			: "l" (lw.tiny) \
+			: "r30", "r31" \
+		); \
+	} else { \
+		/* Longer delays use the smallest possible counter */ \
+		for (__i = lw.t50m; __i != 0; __i--) \
+			__builtin_avr_delay_cycles(50000000); \
+		for (__j = lw.t768; __j != 0; __j--) \
+			__builtin_avr_delay_cycles(762); /* empirical */ \
+		if (lw.t3 != 0) /* time == 0 means sleep for 256*3 cycles! */ \
+			_delay_loop_1(lw.t3); \
+	} \
+} while (0)
 
+static void
+timing_test(void)
+{
+	struct longwait on, off;
+
+	lcd_setup();
 	lcd_display(1, 0, 1);
+
+	DDRA = 0x0f;
+	memset(&on, 0, sizeof(on));
+	memset(&off, 0, sizeof(on));
+	prepare_wait(1, &on);
+	prepare_wait(804, &off);
+
 	lcd_moveto(0, 0);
-	lcd_clear();
+	dump_longwait(&on);
+	lcd_moveto(0, 1);
+	dump_longwait(&off);
 
-	while (1) {
-		draw(0);
+	for (;;) {
+		PORTA = 0x0f;
+		LONG_WAIT(on);
+		PORTA = 0;
+		LONG_WAIT(off);
 	}
-}
-
-static void
-strobe(void)
-{
-}
-
-static void
-oneshot_entry(void)
-{
-}
-
-static void
-oneshot(void)
-{
 }
 
 int
 main(void)
 {
-	int i, j;
+	int i, ready1, ready2, done;
+	uint32_t j, wait1, wait2, on, off, holdoff, cycle_len, duration, ncyc;
+	struct longwait wait1_l, wait2_l, on_l, off_l, holdoff_l, cycle_len_l;
+	uint8_t off_before_ch2, strobe_out;
 
 	/*
-	 * NB external xtal. To select "write lfuse 0 0x2f"
+	 * NB. external xtal. To select "write lfuse 0 0x6f"
 	 */
 	CLKPR = 0x80;
 	CLKPR = 0x00; /* 20 MHz */
+
+	if (0)
+		timing_test();
 
 	/* Turn all pin change interrupts off by default */
 	PCICR = 0x00;
@@ -375,57 +291,250 @@ main(void)
 	PCMSK3 = 0x00;
 
 	/* I/O port direction */
-	DDRA = 0x0f; /* 0-3: out 4-5: in */
-	DDRB = (1 << 4);
-	DDRD = (1 << 7);
+	DDRA = 0x0f; /* 0-1: digital out 4-5: digital in */
+	DDRB = (1 << 4); /* 0-2: encoder 3: button 4: LED1 */
+	DDRD = (1 << 7); /* 7: LED2 */
 	PORTB = 0x00;
-	PORTD = (1 << 7);
-	PORTA = 0x02;
+	PORTD = 0x00;
+	PORTA = 0x00;
 
+	lcd_setup();
+	lcd_display(1, 0, 1);
+	lcd_string("OK ");
+	lcd_moveto(0, 0);
+
+	reset_config();
 	event_setup();
 	encoder_setup();
-	lcd_setup();
+
+	/* Enable interrupts for buttons */
+	PCMSK1 |= (1 << 2)|(1 << 3);
+	PCICR |= (1 << PCIE1);
+
 	sei();
 
-	lcd_display(1, 1, 1);
-	lcd_moveto(0, 0);
-	lcd_string("OK ");
+	for (;;) {
+		/* Disable interrupts for inputs */
+		PCMSK0 &= ~((1 << 4) | (1 << 5));
+		PCICR &= ~(1 << PCIE0);
 
-	strobe_entry();
+		/* Drain any queued events */
+		event_drain();
+		running = 0;
 
-	i = j = 0;
-	while (1) {
-		//lcd_clear();
-		lcd_moveto(0, 0);
-		lcd_string("i=");
-		lcd_string(ntod(i));
-		lcd_clear_eol();
+		/* Input lights off */
+		PORTB &= ~(1 << 4);
+		PORTD &= ~(1 << 7);
 
-		lcd_moveto(0, 1);
-		lcd_string((PINB & (1<<2)) ? "ENC:OFF" : "ENC:ON ");
-		lcd_string(" ");
-		lcd_string((PINB & (1<<3)) ? "PB:ON " : "PB:OFF");
+		/*
+		 * Let the user edit the configuration. This ends when they
+		 * select "ready".
+		 */
+		config_edit();
 
-		lcd_moveto(0, 2);
-		lcd_string((PINA & (1<<4)) ? "IN1:OFF" : "IN1:ON ");
-		lcd_string(" ");
-		lcd_string((PINA & (1<<5)) ? "IN2:OFF" : "IN2:ON ");
+		/* In running mode now */
+		cli();
+		running = 1; /* Accessed in interrupt handler */
+		sei();
+		lcd_display(1, 0, 0);
 
-		lcd_moveto(0, 3);
-		lcd_string("encoder=");
-		lcd_string(ntod(encoder_value()));
-		lcd_clear_eol();
+		/* Calculate delays. */
+		wait1 = duration_to_cycles(cfg.wait, cfg.wait_unit);
+		wait2 = duration_to_cycles(cfg.wait2, cfg.wait_unit);
+		on = duration_to_cycles(cfg.on, cfg.on_unit);
+		holdoff = duration_to_cycles(cfg.holdoff, cfg.holdoff_unit);
+		duration = duration_to_cycles(cfg.len, cfg.len_unit);
+		cycle_len = freq_to_cycles(cfg.freq, cfg.freq_unit);
+		ncyc = (duration + cycle_len - 1) / cycle_len;
 
-		lcd_moveto(9, 3);
-		_delay_ms(100);
+		if (on > cycle_len)
+			on = cycle_len - 1;
+		if (on == 0 || (cfg.mode == MODE_STROBE &&
+		    (on >= cycle_len || ncyc < 1))) {
+			lcd_clear();
+			lcd_string("INVALID PARAMETERS");
+			_delay_ms(5 * 1000);
+			cfg.ready = READY_NO;
+			continue;
+		}
+		off = cycle_len - on;
 
-		//if (++j > 500) {
-			i++;
-			j = 0;
-			PORTA ^= 0x0f;
-			PORTB ^= (1 << 4);
-			PORTD ^= (1 << 7);
-		//}
-		//_delay_ms(1);
+		off_before_ch2 = 0;
+		if (cfg.mode == MODE_ONESHOT) {
+			if (on < wait2) {
+				off_before_ch2 = 1;
+				wait2 -= on;
+			} else {
+				off_before_ch2 = 0;
+				on -= wait2;
+			}
+		}
+
+		/* Turn the input lights on */
+		if (cfg.trigger[0] == TRIG_CHAN_1 ||
+		    cfg.trigger[0] == TRIG_CHAN_1_NOT ||
+		    cfg.trigger[1] == TRIG_CHAN_1 ||
+		    cfg.trigger[1] == TRIG_CHAN_1_NOT)
+			PORTB |= (1 << 4);
+		if (cfg.trigger[0] == TRIG_CHAN_2 ||
+		    cfg.trigger[0] == TRIG_CHAN_2_NOT ||
+		    cfg.trigger[1] == TRIG_CHAN_2 ||
+		    cfg.trigger[1] == TRIG_CHAN_2_NOT)
+			PORTD |= (1 << 7);
+
+		/* Enable interrupt for inputs. */
+		PCMSK0 |= (1 << 4) | (1 << 5);
+		PCICR |= (1 << PCIE0);
+
+		for (done = 0; !done;) {
+			lcd_moveto(0, 0);
+			lcd_string("** RUNNING: ");
+			lcd_string(cfg.mode == MODE_ONESHOT ?
+			    "ONESHOT" : "STROBE");
+			lcd_clear_eol();
+
+			/* Prepare output value for strobe */
+			switch (cfg.output) {
+			case OUT_CH1:
+				strobe_out = (1 << 1);
+				break;
+			case OUT_CH2:
+				strobe_out = (1 << 0);
+				break;
+			case OUT_BOTH:
+				strobe_out = (1 << 0) | (1 << 1);
+				break;
+			default:
+				strobe_out = 0;
+			}
+
+			/* Prepare timer values */
+			prepare_wait(wait1, &wait1_l);
+			prepare_wait(wait2, &wait2_l);
+			prepare_wait(on, &on_l);
+			prepare_wait(holdoff, &holdoff_l);
+			prepare_wait(off, &off_l);
+
+#ifdef DEBUG_RUN
+			lcd_moveto(0, 0);
+			dump_longwait(&holdoff_l);
+#endif
+
+			/* XXX fudge these times for comparison, etc. costs */
+			/* XXX vary sleep mode for delay? */
+
+			/* Wait for input. */
+			event_drain();
+			sleep_for_interrupt();
+
+			/* Terminate running state on encoder press */
+			if ((PINB & (1 << 2)) == 0)
+				break;
+
+#ifdef DEBUG_RUN
+			lcd_moveto(0, 0);
+			lcd_string("** WAKEUP");
+			lcd_clear_eol();
+#endif
+
+			/* Evaluate trigger inputs */
+			ready1 = evaluate_input(cfg.trigger[0]);
+			ready2 = evaluate_input(cfg.trigger[1]);
+			switch (cfg.combine) {
+			case COMBINE_OR:
+				if (!(ready1 || ready2))
+					continue;
+				break;
+			case COMBINE_AND:
+				if (!(ready1 && ready2))
+					continue;
+				break;
+			case COMBINE_XOR:
+				if (!(ready1 ^ ready2))
+					continue;
+				break;
+			case COMBINE_NONE:
+			default:
+				if (!ready1)
+					continue;
+				break;
+			}
+
+#ifdef DEBUG_RUN
+			lcd_moveto(0, 0);
+			lcd_string("** TRIGGERED");
+			lcd_clear_eol();
+#endif
+
+			/* Wait initial delay. */
+			LONG_WAIT(wait1_l);
+
+#ifdef DEBUG_RUN
+			lcd_moveto(0, 0);
+			lcd_string("** GO");
+			lcd_clear_eol();
+#endif
+
+			if (cfg.mode == MODE_ONESHOT) {
+				/* Output on */
+				switch (cfg.output) {
+				case OUT_CH1:
+					PORTA = (1 << 1);
+					LONG_WAIT(on_l);
+					PORTA = 0;
+					break;
+				case OUT_CH2:
+					PORTA = (1 << 0);
+					LONG_WAIT(on_l);
+					PORTA = 0;
+					break;
+				case OUT_BOTH:
+					PORTA = (1 << 1);
+					if (off_before_ch2) {
+						LONG_WAIT(on_l);
+						PORTA = 0;
+						LONG_WAIT(wait2_l);
+						PORTA = (1 << 0);
+						LONG_WAIT(on_l);
+						PORTA = 0;
+					} else {
+						LONG_WAIT(wait2_l);
+						PORTA = (1 << 0) | (1 << 1);
+						LONG_WAIT(on_l);
+						PORTA = (1 << 0);
+						LONG_WAIT(wait2_l);
+						PORTA = 0;
+					}
+					break;
+				}
+				if (cfg.holdoff == -1) {
+					done = 1;
+					break;
+				}
+				lcd_moveto(0, 0);
+				lcd_string("** HOLDOFF");
+				lcd_clear_eol();
+				LONG_WAIT(holdoff_l);
+			} else {
+				for (j = 0; j < ncyc; j++) {
+					PORTA = strobe_out;
+					LONG_WAIT(on_l);
+					PORTA = 0;
+					LONG_WAIT(off_l);
+				}
+				/*
+				 * If we are not in manual trigger, then
+				 * drop back to editor for explicit re-arming.
+				 */
+				if (cfg.trigger[0] != TRIG_MANUAL &&
+				    cfg.trigger[1] != TRIG_MANUAL) {
+					done = 1;
+					break;
+				}
+			}
+		}
+		/* Run completed - back to edit mode */
+		cfg.ready = READY_NO;
 	}
+	/* NOTREACHED */
 }
