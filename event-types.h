@@ -23,6 +23,9 @@
 #define EV_ENCODER		0x00 /* v=1 clockwise, v=0 anti-clockwise */
 /* XXX support numbered encoders */
 
+/* Pushbuttons */
+#define EV_BUTTON		0x01
+
 /* MIDI events */
 #define EV_MIDI_NOTE_ON		0x10 /* chan, note, velocity */
 #define EV_MIDI_NOTE_OFF	0x11 /* chan, note, velocity */
