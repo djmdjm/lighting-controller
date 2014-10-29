@@ -20,8 +20,6 @@ CFLAGS=-mmcu=${MCU} -DF_CPU=${CPUFREQ}UL ${WARNFLAGS} ${OPT} -std=gnu99
 CFLAGS+=-funsigned-char -funsigned-bitfields -fpack-struct -fshort-enums
 CFLAGS+=-g
 
-#LIBAVR_OBJS=demux.o rgbled.o num_format.o spi.o ad56x8.o encoder.o event.o
-#LIBAVR_OBJS+=mcp23s1x.o midi.o lcd.o
 LIBAVR_OBJS=num_format.o lcd.o event.o encoder.o ui.o
 
 CC=avr-gcc

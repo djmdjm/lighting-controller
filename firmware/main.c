@@ -22,17 +22,11 @@
 #include <stdint.h>
 #include <string.h>
 
-#include "rgbled.h"
-#include "demux.h"
 #include "lcd.h"
 #include "num_format.h"
-#include "spi.h"
-#include "ad56x8.h"
 #include "encoder.h"
 #include "event.h"
 #include "event-types.h"
-#include "mcp23s1x.h"
-#include "midi.h"
 #include "ui.h"
 
 static int pb_encoder = 1;
