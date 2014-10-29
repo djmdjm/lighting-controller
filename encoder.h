@@ -37,10 +37,15 @@
  * from a handler elsewhere.
  */
 /* #define ENC_INTERRUPT_HANDLER */
-#define ENC_INTERRUPT_HANDLER
 
-/* Setup to use the rotary encoder */
+/* Setup to use the rotary encoder. */
 void encoder_setup(void);
+
+/* Enable interrupts for encoder (done implicitly by encoder_setup). */
+void encoder_interrupt_enable(void);
+
+/* Disable interrupts for encoder. */
+void encoder_interrupt_disable(void);
 
 /*
  * Returns the value of the running counter incremented and decremented by

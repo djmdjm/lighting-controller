@@ -16,6 +16,7 @@
 
 #include <avr/io.h>
 #include <avr/interrupt.h>
+#include <util/delay.h>
 #include <util/atomic.h>
 #include <stdint.h>
 
@@ -33,9 +34,22 @@ encoder_setup(void)
 {
 	/* Pins -> input */
 	ENC_DDR &= ~ENC_MASK;
+	encoder_interrupt_enable();
+}
+
+void
+encoder_interrupt_enable(void)
+{
 	/* Configure interrupts. XXX assumes nothing fiddles trig mode. */
 	ENC_PCMSK |= ENC_INT_MASK;
 	PCICR |= (1 << ENC_PCIE);
+}
+
+void
+encoder_interrupt_disable(void)
+{
+	ENC_PCMSK &= ~ENC_INT_MASK;
+	PCICR &= ~(1 << ENC_PCIE);
 }
 
 void
@@ -43,10 +57,14 @@ encoder_interrupt(void)
 {
 	static uint8_t code = 0x03;
 	static int8_t decode_lut[] = {
-		0, -1, 1, 0, 1, 0, 0, -1, -1, 0, 0, 1, 0, 1, -1, 0,
+		 0, -1,  1,  0,
+		 1,  0,  0, -1,
+		-1,  0,  0,  1,
+		 0,  1, -1,  0,
 	};
 	static int pulses = 0;
 
+	_delay_us(50); /* Allow input to settle a bit */
 	code = ((code << 2) & 0xf) |
 	    ((ENC_PIN & (1 << ENC_PIN_A)) ? 0x02 : 0x00) |
 	    ((ENC_PIN & (1 << ENC_PIN_B)) ? 0x01 : 0x00);
