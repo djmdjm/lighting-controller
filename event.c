@@ -22,6 +22,9 @@
 #ifdef EVENT_LOCAL_DEBUG
 # define ATOMIC_BLOCK(x) if (1)
 #else
+# include <avr/io.h>
+# include <avr/interrupt.h>
+# include <avr/sleep.h>
 # include <util/atomic.h>
 #endif
 
@@ -46,6 +49,12 @@ event_setup(void)
 {
 	memset(events, '\0', sizeof(events));
 	event_ptr = event_used = event_overflow = event_maxdepth = 0;
+}
+
+void
+event_drain(void)
+{
+	event_setup();
 }
 
 int
@@ -140,6 +149,27 @@ event_reset_overflowed(void)
 		event_overflow = 0;
 	}
 }
+
+#ifndef EVENT_LOCAL_DEBUG
+void
+event_sleep(int sleep_mode, uint8_t *type,
+    uint8_t *v1, uint8_t *v2, uint8_t *v3)
+{
+	set_sleep_mode(sleep_mode);
+	for (;;) {
+		cli();
+		if (event_dequeue(type, v1, v2, v3)) {
+			sei();
+			return;
+		}
+		sleep_enable();
+		sei();
+		sleep_cpu();
+		sleep_disable();
+	}
+	/* NOTREACHED */
+}
+#endif /* EVENT_LOCAL_DEBUG */
 
 #if EVENT_LOCAL_DEBUG
 #include <err.h>

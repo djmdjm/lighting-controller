@@ -32,6 +32,9 @@ void event_setup(void);
 int event_enqueue(uint8_t type, uint8_t v1, uint8_t v2, uint8_t v3,
     int important);
 
+/* Drain all events from queue */
+void event_drain(void);
+
 /*
  * Poll to dequeue an event. Returns 1 if an event was dequeued or zero
  * if none were pending.
@@ -52,6 +55,10 @@ int event_queue_overflowed(void);
 
 /* Reset overflowed flag */
 void event_reset_overflowed(void);
+
+/* Sleep the CPU until an interrupt generated an dequeueable event. */
+void event_sleep(int sleep_mode, uint8_t *type,
+    uint8_t *v1, uint8_t *v2, uint8_t *v3);
 
 #endif /* EVENT_H */
 
