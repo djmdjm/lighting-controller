@@ -19,9 +19,9 @@
 #include "num_format.h"
 
 const char *
-ntod(int n)
+ntod(long int n)
 {
-	static char ret[sizeof(int) * 4 + 2];
+	static char ret[sizeof(long int) * 4 + 2];
 	int neg = 0, i = sizeof(ret) - 2;
 
 	if (n == 0)
@@ -41,9 +41,9 @@ ntod(int n)
 }
 
 const char *
-ntoh(unsigned int n, int preamble)
+ntoh(long unsigned int n, int preamble)
 {
-	static char ret[sizeof(unsigned int) * 2 + 2 + 1];
+	static char ret[sizeof(long unsigned int) * 2 + 2 + 1];
 	int i = sizeof(ret) - 2;
 
 	if (n == 0)

@@ -20,13 +20,13 @@
 /* Lightweight number to string conversions */
 
 /* Convert an integer to decimal */
-const char *ntod(int n);
+const char *ntod(long int n);
 
 /*
  * Convert an unsigned integer to hexadecimal.
  * If 'preamble' set, prepend '0x'
  */
-const char *ntoh(unsigned int n, int preamble);
+const char *ntoh(long unsigned int n, int preamble);
 
 /* Right justify a string into a buffer */
 char *rjustify(const char *s, char *buf, unsigned int width);
